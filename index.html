@@ -672,7 +672,7 @@
 
         .timeframe-grid-layout {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(5, 1fr);
             gap: 8px;
         }
 
@@ -735,17 +735,6 @@
             text-shadow: none;
         }
 
-        .btn-return-style {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
-            box-shadow: 0 4px 15px rgba(56, 239, 125, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.2) !important;
-            border-bottom: 3px solid rgba(0, 0, 0, 0.3) !important;
-        }
-        .btn-return-style:hover {
-            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 50%, #ec4899 100%) !important;
-            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.6) !important;
-            color: #000000 !important;
-        }
-
         .delete-zone { margin-top: 14px; padding-top: 14px; border-top: 1px dashed #222c3c; }
         
         .btn-delete-order {
@@ -762,6 +751,19 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(6, 182, 212, 0.6);
             color: #000000 !important;
+        }
+
+        .btn-mini { padding: 8px 14px; font-size: 11.5px; background: linear-gradient(145deg, #1e293b, #0f172a); color: #fff; border: 1px solid rgba(255,255,255,0.03); border-radius: 6px; cursor: pointer; font-weight: 700; transition: all 0.2s; }
+        
+        .btn-add-account {
+            background: linear-gradient(135deg, #e11d48 0%, #be123c 100%) !important;
+            box-shadow: 0 4px 10px rgba(225, 29, 72, 0.3) !important;
+            border: 1px solid rgba(244, 63, 94, 0.4) !important;
+        }
+        .btn-add-account:hover {
+            background: linear-gradient(135deg, #10b981 0%, #06b6d4 50%, #3b82f6 100%) !important;
+            color: #000000 !important;
+            box-shadow: 0 6px 18px rgba(6, 182, 212, 0.6) !important;
         }
 
         .btn-danger-mini-red {
@@ -783,6 +785,28 @@
             background: linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%) !important;
             color: #000000 !important;
             box-shadow: 0 6px 20px rgba(249, 115, 22, 0.6) !important;
+        }
+
+        .btn-export-mini-blue {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.25) !important;
+            color: #ffffff !important;
+        }
+        .btn-export-mini-blue:hover {
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #1d4ed8 100%) !important;
+            color: #000000 !important;
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6) !important;
+        }
+
+        .btn-logout-mini-orange {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
+            box-shadow: 0 4px 10px rgba(249, 115, 22, 0.25) !important;
+            color: #ffffff !important;
+        }
+        .btn-logout-mini-orange:hover {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%) !important;
+            color: #000000 !important;
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.6) !important;
         }
 
         .calendar-picker-wrapper { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; position: relative; }
@@ -951,20 +975,6 @@
         .account-manage-title { font-size: 13px; color: #00f2fe; font-weight: 700; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .account-action-row { display: flex; gap: 10px; margin-top: 12px; }
         
-        /* 迷你帳戶操作按鈕基礎與美化樣式 */
-        .btn-mini { padding: 8px 14px; font-size: 11.5px; background: linear-gradient(145deg, #1e293b, #0f172a); color: #fff; border: 1px solid rgba(255,255,255,0.03); border-radius: 6px; cursor: pointer; font-weight: 700; transition: all 0.2s; }
-        
-        .btn-add-account {
-            background: linear-gradient(135deg, #e11d48 0%, #be123c 100%) !important;
-            box-shadow: 0 4px 10px rgba(225, 29, 72, 0.3) !important;
-            border: 1px solid rgba(244, 63, 94, 0.4) !important;
-        }
-        .btn-add-account:hover {
-            background: linear-gradient(135deg, #10b981 0%, #06b6d4 50%, #3b82f6 100%) !important;
-            color: #000000 !important;
-            box-shadow: 0 6px 18px rgba(6, 182, 212, 0.6) !important;
-        }
-
         /* 賽步美化：風控與剩餘額度面板 */
         .account-balance-panel {
             background: linear-gradient(145deg, #020408, #0b0f19);
@@ -1042,107 +1052,6 @@
             accent-color: #fb923c;
         }
         .tip-text { text-align: center; color: #475569; font-size: 11px; margin-top: 12px; font-weight: 500; line-height: 1.3; }
-
-        @keyframes fileSystemAlertFlash {
-            0% { 
-                border-color: rgba(255, 59, 48, 0.3); 
-                box-shadow: 0 0 4px rgba(255, 59, 48, 0.1); 
-            }
-            100% { 
-                border-color: #ff3b30; 
-                box-shadow: 0 0 25px #ff3b30, inset 0 0 15px rgba(255, 59, 48, 0.4); 
-            }
-        }
-        
-        /* 本地檔案無縫覆蓋系統功能區域美化 */
-        .file-sync-panel {
-            background: linear-gradient(135deg, rgba(13, 17, 29, 0.95) 0%, rgba(6, 9, 15, 0.9) 100%);
-            border: 1px solid rgba(0, 242, 254, 0.25);
-            border-radius: 14px;
-            padding: 16px;
-            margin-top: 18px;
-            box-sizing: border-box;
-            width: 100%;
-            text-align: left;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.05);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .file-sync-panel::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(0, 242, 254, 0.4), transparent);
-        }
-        
-        .file-sync-panel.alert-flash {
-            animation: fileSystemAlertFlash 0.5s infinite alternate !important;
-        }
-        
-        .file-sync-title {
-            font-size: 13.5px;
-            color: #00f2fe;
-            font-weight: 800;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            letter-spacing: 0.5px;
-            text-shadow: 0 0 8px rgba(0, 242, 254, 0.3);
-        }
-        
-        .file-status-badge { 
-            font-size: 11px; 
-            padding: 3px 8px; 
-            border-radius: 6px; 
-            font-weight: 700; 
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-        
-        .file-status-unlinked { 
-            background: rgba(255, 59, 48, 0.12); 
-            color: #ff3b30; 
-            border: 1px solid rgba(255, 59, 48, 0.3); 
-            text-shadow: 0 0 6px rgba(255, 59, 48, 0.4);
-        }
-        
-        .file-status-linked { 
-            background: rgba(0, 255, 163, 0.12); 
-            color: #00ffa3; 
-            border: 1px solid rgba(0, 255, 163, 0.3); 
-            text-shadow: 0 0 6px rgba(0, 255, 163, 0.4);
-        }
-
-        /* 本地檔案覆蓋系統按鈕特化美化 */
-        .btn-file-link {
-            width: 100%;
-            background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #075985 100%);
-            color: #fff;
-            padding: 10px 14px;
-            border: none;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 800;
-            cursor: pointer;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.2);
-            border-bottom: 2px solid rgba(0, 0, 0, 0.4);
-            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-        .btn-file-link:hover {
-            background: linear-gradient(135deg, #ec4899 0%, #f43f5e 50%, #f472b6 100%) !important;
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(244, 63, 94, 0.5);
-            color: #000000 !important;
-        }
 
         #hiddenFileInput { display: none; }
 
@@ -1291,7 +1200,7 @@
                 </svg>
                 使用 GMAIL 帳戶登入
             </button>
-            <div style="margin-top: 20px; font-size: 11px; color: #475569; font-weight: bold; letter-spacing: 1px;">Version v0.0.3</div>
+            <div style="margin-top: 20px; font-size: 11px; color: #475569; font-weight: bold; letter-spacing: 1px;">Version v0.0.4</div>
         </div>
     </div>
 
@@ -1303,7 +1212,10 @@
             <div class="account-manage-box">
                 <div class="account-manage-title">
                     <span>💳 當前操作帳號設定</span>
-                    <button type="button" class="btn-mini btn-add-account" onclick="addNewAccountPrompt()">➕ 新增帳號</button>
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" class="btn-mini btn-logout-mini-orange" onclick="logoutFirebase()">🚪 登出</button>
+                        <button type="button" class="btn-mini btn-add-account" onclick="addNewAccountPrompt()">➕ 新增帳號</button>
+                    </div>
                 </div>
                 <div class="form-group" style="margin-bottom: 0;">
                     <select id="currentAccountSelect" onchange="onAccountSelectorChange()"></select>
@@ -1322,6 +1234,7 @@
 
                 <div class="account-action-row">
                     <button type="button" class="btn-mini btn-danger-mini-red" style="flex: 1;" onclick="deleteCurrentAccount()">🗑️ 刪除帳號</button>
+                    <button type="button" class="btn-mini btn-export-mini-blue" style="flex: 1;" onclick="exportTradingData()">📤 匯出數據</button>
                     <button type="button" class="btn-mini btn-import-mini-green" style="flex: 1;" onclick="triggerFileInput()">📥 匯入數據</button>
                     <input type="file" id="hiddenFileInput" accept=".json" onchange="importTradingData(event)">
                 </div>
@@ -1342,7 +1255,7 @@
                         <label>Date & Time</label>
                         <div class="datetime-picker-row">
                             <input type="date" id="tradeDateInput" onchange="onTradeDateInputChange()">
-                            <input type="text" id="liveDateTimeStr" placeholder="00:00:00" onfocus="pauseLiveClock()" onblur="resumeLiveClock()" oninput="formatLiveTimeInput(this)">
+                            <input type="text" id="liveDateTimeStr" placeholder="00:00" onfocus="pauseLiveClock()" onblur="resumeLiveClock()" oninput="formatLiveTimeInput(this)">
                         </div>
                     </div>
 
@@ -1394,7 +1307,6 @@
                             <div style="flex: 1;">
                                 <label>模式 (Mode)<span class="required-star">*</span></label>
                                 <select id="strategyMode" required>
-                                    <option value="NO">NO</option>
                                     <option value="ONLY ONE" selected>ONLY ONE</option>
                                     <option value="PLUS">PLUS</option>
                                     <option value="STRONG">STRONG</option>
@@ -1431,6 +1343,14 @@
                                 <option value="4H">4H</option>
                             </select>
                             <select id="timeframe4">
+                                <option value="NO" selected>NO</option>
+                                <option value="1M">1M</option>
+                                <option value="5M">5M</option>
+                                <option value="15M">15M</option>
+                                <option value="1H">1H</option>
+                                <option value="4H">4H</option>
+                            </select>
+                            <select id="timeframe5">
                                 <option value="NO" selected>NO</option>
                                 <option value="1M">1M</option>
                                 <option value="5M">5M</option>
@@ -1549,16 +1469,6 @@
                         <div style="position:relative; width:100%; height:140px;">
                             <canvas id="intradayBarChartCanvas"></canvas>
                         </div>
-                        
-                        <div class="file-sync-panel" id="fileSyncPanelLocation">
-                            <div class="file-sync-title">
-                                <span>💾 本地檔案無縫覆蓋系統</span>
-                                <span id="fileStatusBadge" class="file-status-badge file-status-unlinked">未連結</span>
-                            </div>
-                            <button type="button" class="btn-file-link" onclick="initFileHandle()">
-                                🔗 設定並鏈結本地自動覆蓋檔案
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -1572,74 +1482,19 @@
                 <div class="mini-chart-title" style="margin-bottom: 0; font-size: 13px; color: #00f2fe; letter-spacing: 1px;">📋 交易數據歷史</div>
                 <div class="strategy-winrate-box">
                     <div>
-                        <select id="strategyFilterSelect" class="strategy-select-mini" onchange="calculateStrategyWinRates()" title="策略種類">
+                        <select id="strategyFilterSelect" class="strategy-select-mini" onchange="calculateStrategyWinRates()">
                             <option value="ALL">ALL Strategy</option>
                             <option value="OB">OB</option>
                             <option value="ORB">ORB</option>
                             <option value="無跟策略">無跟策略</option>
                         </select>
                     </div>
-                    <div>
-                        <select id="modeFilterSelect" class="strategy-select-mini" onchange="calculateStrategyWinRates()" title="策略模式">
-                            <option value="ALL">ALL Mode</option>
-                            <option value="NO">NO</option>
-                            <option value="ONLY ONE">ONLY ONE</option>
-                            <option value="PLUS">PLUS</option>
-                            <option value="STRONG">STRONG</option>
-                        </select>
-                    </div>
-                    
-                    <div style="display: flex; gap: 4px; align-items: center;">
-                        <span style="font-size: 11px; color: #64748b; font-weight: 800; text-transform: uppercase;">TFs:</span>
-                        <select id="filterTf1" class="strategy-select-mini" onchange="calculateStrategyWinRates()" title="過濾時區 1">
-                            <option value="ALL">ALL</option>
-                            <option value="NO">NO</option>
-                            <option value="1M">1M</option>
-                            <option value="5M">5M</option>
-                            <option value="15M">15M</option>
-                            <option value="1H">1H</option>
-                            <option value="4H">4H</option>
-                        </select>
-                        <select id="filterTf2" class="strategy-select-mini" onchange="calculateStrategyWinRates()" title="過濾時區 2">
-                            <option value="ALL">ALL</option>
-                            <option value="NO">NO</option>
-                            <option value="1M">1M</option>
-                            <option value="5M">5M</option>
-                            <option value="15M">15M</option>
-                            <option value="1H">1H</option>
-                            <option value="4H">4H</option>
-                        </select>
-                        <select id="filterTf3" class="strategy-select-mini" onchange="calculateStrategyWinRates()" title="過濾時區 3">
-                            <option value="ALL">ALL</option>
-                            <option value="NO">NO</option>
-                            <option value="1M">1M</option>
-                            <option value="5M">5M</option>
-                            <option value="15M">15M</option>
-                            <option value="1H">1H</option>
-                            <option value="4H">4H</option>
-                        </select>
-                        <select id="filterTf4" class="strategy-select-mini" onchange="calculateStrategyWinRates()" title="過濾時區 4">
-                            <option value="ALL">ALL</option>
-                            <option value="NO">NO</option>
-                            <option value="1M">1M</option>
-                            <option value="5M">5M</option>
-                            <option value="15M">15M</option>
-                            <option value="1H">1H</option>
-                            <option value="4H">4H</option>
-                        </select>
-                    </div>
-                    
-                    <div class="winrate-indicator-item" style="border-left: 1px solid #1e293b; padding-left: 10px;">Filtered WR:<span id="wr_filtered" style="color: #00ffa3;">0%</span></div>
-                    <div class="winrate-indicator-item">Count:<span id="filtered_trades_count" style="color: #00f2fe;">0</span></div>
-                    
-                    <div style="display: flex; gap: 8px; margin-left: 10px; border-left: 1px solid #1e293b; padding-left: 10px;">
-                        <div class="winrate-indicator-item">1M:<span id="wr_1m">0%</span></div>
-                        <div class="winrate-indicator-item">5M:<span id="wr_5m">0%</span></div>
-                        <div class="winrate-indicator-item">15M:<span id="wr_15m">0%</span></div>
-                        <div class="winrate-indicator-item">1H:<span id="wr_1h">0%</span></div>
-                        <div class="winrate-indicator-item">4H:<span id="wr_4h">0%</span></div>
-                        <div class="winrate-indicator-item">ALL:<span id="wr_all">0%</span></div>
-                    </div>
+                    <div class="winrate-indicator-item">1M:<span id="wr_1m">0%</span></div>
+                    <div class="winrate-indicator-item">5M:<span id="wr_5m">0%</span></div>
+                    <div class="winrate-indicator-item">15M:<span id="wr_15m">0%</span></div>
+                    <div class="winrate-indicator-item">1H:<span id="wr_1h">0%</span></div>
+                    <div class="winrate-indicator-item">4H:<span id="wr_4h">0%</span></div>
+                    <div class="winrate-indicator-item">ALL:<span id="wr_all">0%</span></div>
                 </div>
             </div>
             <div class="trade-data-table-wrapper">
@@ -1677,13 +1532,11 @@
         </div>
     </div>
 
-    <!-- Firebase Connection & Application Logic as an ES Module -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        let fileHandleGlobal = null;
         let defaultAccounts = [{ name: "Apex-Main-01", balance: 2000 }];
         let accounts = JSON.parse(localStorage.getItem('trading_accounts_v2')) || defaultAccounts;
         let currentAccount = localStorage.getItem('current_trading_account') || accounts[0].name;
@@ -1711,7 +1564,6 @@
         let clockTimerToken = null;
         let isClockPaused = false;
 
-        // Firebase Setup & Variables
         let user = null;
         let auth, db;
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'mytradingrecords-8838e';
@@ -1736,7 +1588,6 @@
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                // 監聽登入狀態：一旦成功登入，系統會自動將密碼鎖畫面隱藏
                 onAuthStateChanged(auth, (u) => {
                     user = u;
                     if (u) {
@@ -1747,7 +1598,6 @@
                     }
                 });
 
-                // 按鈕綁定改回 Popup 彈窗模式 (解決 Redirect 刷新後無反應的問題)
                 document.getElementById('googleLoginBtn').addEventListener('click', async () => {
                     try {
                         const provider = new GoogleAuthProvider();
@@ -1763,17 +1613,26 @@
             }
         };
 
+        async function logoutFirebase() {
+            try {
+                if(auth) {
+                    await signOut(auth);
+                }
+            } catch(e) {
+                console.error("登出失敗:", e);
+            }
+        }
+
         let unsubscribeTrades = null;
         let unsubscribeAccounts = null;
 
         function setupFirestoreListeners() {
-            if (!user) return;
+            if (!user || !user.email) return;
 
             if (unsubscribeTrades) unsubscribeTrades();
             if (unsubscribeAccounts) unsubscribeAccounts();
 
-            // 🔥 核心修改：將所有的路徑從 public/data/ 改為針對該登入信箱專屬的 users/UID/
-            const tradesCol = collection(db, 'artifacts', appId, 'users', user.uid, 'trades');
+            const tradesCol = collection(db, 'artifacts', appId, 'users', user.email, 'trades');
             unsubscribeTrades = onSnapshot(tradesCol, (snapshot) => {
                 let tempTrades = [];
                 snapshot.forEach(doc => {
@@ -1784,7 +1643,6 @@
                     trades = tempTrades;
                     localStorage.setItem('trading_data', JSON.stringify(trades));
                 } else if (trades.length > 0) {
-                    // 若雲端是空的（第一次登入），把本地單同步上去您的專屬帳號
                     trades.forEach(t => firestoreSaveTrade(t));
                 }
                 refreshDayState();
@@ -1792,8 +1650,7 @@
                 console.error("Firestore trades listener failed:", error);
             });
 
-            // 🔥 核心修改：針對該登入信箱專屬的 users/UID/ 儲存帳戶設定
-            const accountsCol = collection(db, 'artifacts', appId, 'users', user.uid, 'accounts');
+            const accountsCol = collection(db, 'artifacts', appId, 'users', user.email, 'accounts');
             unsubscribeAccounts = onSnapshot(accountsCol, (snapshot) => {
                 let tempAccounts = [];
                 snapshot.forEach(doc => {
@@ -1814,10 +1671,9 @@
         }
 
         async function firestoreSaveTrade(trade) {
-            if (!user) return;
+            if (!user || !user.email) return;
             try {
-                // 🔥 將儲存路徑轉往使用者的專屬 UID 下
-                const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'trades', trade.id);
+                const docRef = doc(db, 'artifacts', appId, 'users', user.email, 'trades', trade.id);
                 await setDoc(docRef, trade);
             } catch (err) {
                 console.error("Firestore save trade failure:", err);
@@ -1825,10 +1681,9 @@
         }
 
         async function firestoreDeleteTrade(tradeId) {
-            if (!user) return;
+            if (!user || !user.email) return;
             try {
-                // 🔥 將刪除路徑轉往使用者的專屬 UID 下
-                const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'trades', tradeId);
+                const docRef = doc(db, 'artifacts', appId, 'users', user.email, 'trades', tradeId);
                 await deleteDoc(docRef);
             } catch (err) {
                 console.error("Firestore delete trade failure:", err);
@@ -1836,10 +1691,9 @@
         }
 
         async function firestoreSaveAccount(acc) {
-            if (!user) return;
+            if (!user || !user.email) return;
             try {
-                // 🔥 將帳戶路徑轉往使用者的專屬 UID 下
-                const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'accounts', acc.name);
+                const docRef = doc(db, 'artifacts', appId, 'users', user.email, 'accounts', acc.name);
                 await setDoc(docRef, acc);
             } catch (err) {
                 console.error("Firestore save account failure:", err);
@@ -1847,9 +1701,9 @@
         }
 
         async function firestoreDeleteAccount(accName) {
-            if (!user) return;
+            if (!user || !user.email) return;
             try {
-                const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'accounts', accName);
+                const docRef = doc(db, 'artifacts', appId, 'users', user.email, 'accounts', accName);
                 await deleteDoc(docRef);
             } catch (err) {
                 console.error("Firestore delete account failure:", err);
@@ -1874,7 +1728,7 @@
             function updateClock() {
                 if (isClockPaused || activeOrderIndexGlobal !== -1) return;
                 const now = new Date();
-                const timeStr = now.toTimeString().split(' ')[0];
+                const timeStr = now.toTimeString().substring(0, 5); 
                 const liveEl = document.getElementById('liveDateTimeStr');
                 if (liveEl && !isClockPaused && activeOrderIndexGlobal === -1) {
                     liveEl.value = timeStr;
@@ -1901,17 +1755,14 @@
 
         function formatLiveTimeInput(input) {
             let val = input.value.replace(/[^\d]/g, '');
-            if (val.length > 6) val = val.substr(0, 6);
+            if (val.length > 4) val = val.substr(0, 4); 
             
             let formatted = '';
             if (val.length > 0) {
                 formatted += val.substr(0, 2);
             }
             if (val.length > 2) {
-                formatted += ':' + val.substr(2, 2);
-            }
-            if (val.length > 4) {
-                formatted += ':' + val.substr(4, 2);
+                formatted += ':' + val.substr(2, 2); 
             }
             input.value = formatted;
         }
@@ -2083,7 +1934,6 @@
 
                         localStorage.setItem('trading_data', JSON.stringify(trades));
                         refreshDayState();
-                        triggerBackgroundFileSync();
                     } else {
                         alert("❌ 格式不符：匯入的檔案內容必須是 JSON 陣列結構。");
                     }
@@ -2094,6 +1944,16 @@
                 event.target.value = "";
             };
             reader.readAsText(file);
+        }
+
+        function exportTradingData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(trades, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", `Kenji_Trading_Data_${getTodayDateStr()}.json`);
+            document.body.appendChild(dlAnchorElem);
+            dlAnchorElem.click();
+            dlAnchorElem.remove();
         }
 
         function onMonthSelectorChange() {
@@ -2197,7 +2057,7 @@
             filteredTrades.sort((a, b) => b.date.localeCompare(a.date) || (b.time || "").localeCompare(a.time || ""));
 
             if (filteredTrades.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; color:#475569; padding: 20px;">No trade data recorded in history.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan=\"11\" style=\"text-align:center; color:#475569; padding: 20px;\">No trade data recorded in history.</td></tr>`;
                 return;
             }
 
@@ -2247,77 +2107,30 @@
 
         function calculateStrategyWinRates() {
             const selectedStrat = document.getElementById('strategyFilterSelect').value;
-            const selectedMode = document.getElementById('modeFilterSelect').value;
-            
-            const tf1 = document.getElementById('filterTf1').value;
-            const tf2 = document.getElementById('filterTf2').value;
-            const tf3 = document.getElementById('filterTf3').value;
-            const tf4 = document.getElementById('filterTf4').value;
-            
             let filteredTrades = [...trades];
             
             if (selectedStrat !== 'ALL') {
-                filteredTrades = filteredTrades.filter(t => (t.theory || '').toUpperCase() === selectedStrat.toUpperCase());
+                filteredTrades = filteredTrades.filter(t => (t.theory || '').toUpperCase() === selectedStrat);
             }
-            
-            if (selectedMode !== 'ALL') {
-                filteredTrades = filteredTrades.filter(t => (t.strategyMode || '').toUpperCase() === selectedMode.toUpperCase());
-            }
-            
-            const activeTfs = [tf1, tf2, tf3, tf4].filter(tf => tf !== 'ALL');
-            if (activeTfs.length > 0) {
-                filteredTrades = filteredTrades.filter(t => {
-                    const tradeTfs = [t.timeframe, t.timeframe2, t.timeframe3, t.timeframe4]
-                        .filter(x => x && x !== 'NO')
-                        .map(x => x.toUpperCase());
-                    
-                    return activeTfs.every(activeTf => {
-                        if (activeTf === 'NO') {
-                            return [t.timeframe, t.timeframe2, t.timeframe3, t.timeframe4]
-                                .some(x => !x || x.toUpperCase() === 'NO');
-                        }
-                        return tradeTfs.includes(activeTf.toUpperCase());
-                    });
-                });
-            }
-            
-            let wins = filteredTrades.filter(t => t.outcome === 'WIN').length;
-            let total = filteredTrades.length;
-            let wr = total > 0 ? ((wins / total) * 100).toFixed(0) + '%' : '0%';
-            
-            document.getElementById('wr_filtered').innerText = wr;
-            document.getElementById('filtered_trades_count').innerText = total;
 
             const timeframes = ['1M', '5M', '15M', '1H', '4H'];
+            
             timeframes.forEach(tf => {
-                let tfTrades = [...trades];
-                if (selectedStrat !== 'ALL') {
-                    tfTrades = tfTrades.filter(t => (t.theory || '').toUpperCase() === selectedStrat.toUpperCase());
-                }
-                if (selectedMode !== 'ALL') {
-                    tfTrades = tfTrades.filter(t => (t.strategyMode || '').toUpperCase() === selectedMode.toUpperCase());
-                }
-                tfTrades = tfTrades.filter(t => 
+                let tfTrades = filteredTrades.filter(t => 
                     (t.timeframe || '').toUpperCase() === tf ||
                     (t.timeframe2 || '').toUpperCase() === tf ||
                     (t.timeframe3 || '').toUpperCase() === tf ||
-                    (t.timeframe4 || '').toUpperCase() === tf
+                    (t.timeframe4 || '').toUpperCase() === tf ||
+                    (t.timeframe5 || '').toUpperCase() === tf
                 );
-                let tfWins = tfTrades.filter(t => t.outcome === 'WIN').length;
-                let tfTotal = tfTrades.length;
-                let tfWr = tfTotal > 0 ? ((tfWins / tfTotal) * 100).toFixed(0) + '%' : '0%';
-                document.getElementById(`wr_${tf.toLowerCase()}`).innerText = tfWr;
+                let wins = tfTrades.filter(t => t.outcome === 'WIN').length;
+                let total = tfTrades.length;
+                let wr = total > 0 ? ((wins / total) * 100).toFixed(0) + '%' : '0%';
+                document.getElementById(`wr_${tf.toLowerCase()}`).innerText = wr;
             });
 
-            let allBaseTrades = [...trades];
-            if (selectedStrat !== 'ALL') {
-                allBaseTrades = allBaseTrades.filter(t => (t.theory || '').toUpperCase() === selectedStrat.toUpperCase());
-            }
-            if (selectedMode !== 'ALL') {
-                allBaseTrades = allBaseTrades.filter(t => (t.strategyMode || '').toUpperCase() === selectedMode.toUpperCase());
-            }
-            let allWins = allBaseTrades.filter(t => t.outcome === 'WIN').length;
-            let allTotal = allBaseTrades.length;
+            let allWins = filteredTrades.filter(t => t.outcome === 'WIN').length;
+            let allTotal = filteredTrades.length;
             let allWr = allTotal > 0 ? ((allWins / allTotal) * 100).toFixed(0) + '%' : '0%';
             document.getElementById('wr_all').innerText = allWr;
         }
@@ -2337,6 +2150,7 @@
 
         function calculateZellaScore() {
             let srcTrades = [...trades];
+            
             srcTrades.sort((a, b) => a.date.localeCompare(b.date) || (a.time || "").localeCompare(a.time || ""));
 
             let totalTrades = srcTrades.length;
@@ -2625,7 +2439,6 @@
 
         function renderCalendarGrid() {
             const grid = document.getElementById('calendarGrid');
-            if (!grid) return;
             grid.innerHTML = "";
             let daysInMonth = getDaysInMonth(currentYear, currentMonth);
             let firstDay = getFirstDayOfWeek(currentYear, currentMonth);
@@ -2801,6 +2614,7 @@
                 document.getElementById('timeframe2').value = "NO";
                 document.getElementById('timeframe3').value = "NO";
                 document.getElementById('timeframe4').value = "NO";
+                document.getElementById('timeframe5').value = "NO";
                 document.getElementById('mindset').value = "";
                 document.getElementById('screenshot').value = "";
                 document.getElementById('screenshotContent').innerHTML = `<span style="color:#475569; font-size:13px;">🆕 請在左側輸入截圖網址並存檔</span>`;
@@ -2827,10 +2641,11 @@
                 document.getElementById('timeframe2').value = targetTrade.timeframe2 || "NO";
                 document.getElementById('timeframe3').value = targetTrade.timeframe3 || "NO";
                 document.getElementById('timeframe4').value = targetTrade.timeframe4 || "NO";
+                document.getElementById('timeframe5').value = targetTrade.timeframe5 || "NO";
                 document.getElementById('mindset').value = targetTrade.mindset || "";
                 document.getElementById('screenshot').value = targetTrade.screenshot || "";
 
-                document.getElementById('liveDateTimeStr').value = targetTrade.time || "00:00:00";
+                document.getElementById('liveDateTimeStr').value = targetTrade.time || "00:00";
 
                 if (targetTrade.screenshot && targetTrade.screenshot.startsWith('http')) {
                     document.getElementById('screenshotContent').innerHTML = `
@@ -2855,22 +2670,16 @@
             const timeframe2 = document.getElementById('timeframe2').value;
             const timeframe3 = document.getElementById('timeframe3').value;
             const timeframe4 = document.getElementById('timeframe4').value;
+            const timeframe5 = document.getElementById('timeframe5').value;
             const mindset = document.getElementById('mindset').value.trim();
             const screenshot = document.getElementById('screenshot').value.trim();
 
             let timeInputVal = document.getElementById('liveDateTimeStr').value.trim();
             if (!timeInputVal) {
-                timeInputVal = new Date().toTimeString().split(' ')[0];
+                timeInputVal = new Date().toTimeString().substring(0, 5);
             }
 
             if (!symbol || !outcome || !position || rValue === "" || pnlAmount === "" || !theory || !strategyMode || !timeframe || !mindset || !screenshot) {
-                return false;
-            }
-
-            if (!fileHandleGlobal) {
-                const panel = document.getElementById('fileSyncPanelLocation');
-                panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                panel.classList.add('alert-flash');
                 return false;
             }
 
@@ -2894,6 +2703,7 @@
                     trades[idx].timeframe2 = timeframe2;
                     trades[idx].timeframe3 = timeframe3;
                     trades[idx].timeframe4 = timeframe4;
+                    trades[idx].timeframe5 = timeframe5;
                     trades[idx].mindset = mindset;
                     trades[idx].screenshot = screenshot;
                     trades[idx].time = timeInputVal;
@@ -2918,6 +2728,7 @@
                     timeframe2: timeframe2,
                     timeframe3: timeframe3,
                     timeframe4: timeframe4,
+                    timeframe5: timeframe5,
                     mindset: mindset,
                     screenshot: screenshot
                 };
@@ -2934,42 +2745,6 @@
             localStorage.setItem('trading_data', JSON.stringify(trades));
             activeOrderIndexGlobal = -1;
             refreshDayState();
-            triggerBackgroundFileSync();
-        }
-
-        async function initFileHandle() {
-            try {
-                if ('showSaveFilePicker' in window) {
-                    fileHandleGlobal = await window.showSaveFilePicker({
-                        suggestedName: 'Kenji_Trading_Data.json',
-                        types: [{
-                            description: 'JSON Files',
-                            accept: { 'application/json': ['.json'] },
-                        }],
-                    });
-                    document.getElementById('fileStatusBadge').innerText = "已鏈結覆蓋";
-                    document.getElementById('fileStatusBadge').className = "file-status-badge file-status-linked";
-                    document.getElementById('fileSyncPanelLocation').classList.remove('alert-flash');
-                    triggerBackgroundFileSync();
-                } else {
-                    alert("瀏覽器不支援本地檔案直接覆蓋 API (FileSystem API)，請換用最新版 Chrome 或 Edge 瀏覽器。");
-                }
-            } catch (err) {
-                console.error("未能獲取檔案控制權:", err);
-            }
-        }
-
-        async function triggerBackgroundFileSync() {
-            if (!fileHandleGlobal) return; 
-            const dataStr = JSON.stringify(trades, null, 2);
-            try {
-                const writable = await fileHandleGlobal.createWritable();
-                await writable.write(dataStr);
-                await writable.close();
-                console.log("Kenji 自動覆蓋文件成功。");
-            } catch (err) {
-                console.error("自動覆蓋寫入失敗: ", err);
-            }
         }
 
         function deleteCurrentSelectedOrder() {
@@ -2984,7 +2759,6 @@
 
             activeOrderIndexGlobal = -1;
             refreshDayState();
-            triggerBackgroundFileSync();
         }
 
         function renderIntradayBarChart() {
@@ -3323,12 +3097,13 @@
             }
         }
 
-        // Expose modules to global window context for inline events
         window.onAccountSelectorChange = onAccountSelectorChange;
         window.addNewAccountPrompt = addNewAccountPrompt;
         window.deleteCurrentAccount = deleteCurrentAccount;
         window.triggerFileInput = triggerFileInput;
         window.importTradingData = importTradingData;
+        window.exportTradingData = exportTradingData;
+        window.logoutFirebase = logoutFirebase;
         window.onTradeDateInputChange = onTradeDateInputChange;
         window.pauseLiveClock = pauseLiveClock;
         window.resumeLiveClock = resumeLiveClock;
@@ -3336,8 +3111,6 @@
         window.autoAdjustSign = autoAdjustSign;
         window.handleFormSubmit = handleFormSubmit;
         window.onMonthSelectorChange = onMonthSelectorChange;
-        window.initFileHandle = initFileHandle;
-        window.calculateStrategyWinRates = calculateStrategyWinRates;
         window.switchChartTab = switchChartTab;
         window.deleteCurrentSelectedOrder = deleteCurrentSelectedOrder;
         window.previewImageInDashboard = previewImageInDashboard;
