@@ -1291,7 +1291,7 @@
                 </svg>
                 使用 GMAIL 帳戶登入
             </button>
-            <div style="margin-top: 20px; font-size: 11px; color: #475569; font-weight: bold; letter-spacing: 1px;">Version v0.0.2</div>
+            <div style="margin-top: 20px; font-size: 11px; color: #475569; font-weight: bold; letter-spacing: 1px;">Version v0.0.3</div>
         </div>
     </div>
 
@@ -1677,9 +1677,10 @@
         </div>
     </div>
 
+    <!-- Firebase Connection & Application Logic as an ES Module -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         let fileHandleGlobal = null;
@@ -1735,17 +1736,7 @@
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                // Handle Redirect Result for GitHub Pages environment cross-domain restriction
-                try {
-                    const result = await getRedirectResult(auth);
-                    if (result && result.user) {
-                        console.log("Redirect login successful");
-                    }
-                } catch (redirectErr) {
-                    console.error("Redirect handler token verification error:", redirectErr);
-                }
-
-                // Setup listener for authenticating via Google Sign-In
+                // 監聽登入狀態：一旦成功登入，系統會自動將密碼鎖畫面隱藏
                 onAuthStateChanged(auth, (u) => {
                     user = u;
                     if (u) {
@@ -1756,12 +1747,13 @@
                     }
                 });
 
+                // 按鈕綁定改回 Popup 彈窗模式 (解決 Redirect 刷新後無反應的問題)
                 document.getElementById('googleLoginBtn').addEventListener('click', async () => {
                     try {
                         const provider = new GoogleAuthProvider();
-                        // Resolved auth/unauthorized-domain by enforcing safe Cross-Origin Redirect mechanism
-                        await signInWithRedirect(auth, provider);
+                        await signInWithPopup(auth, provider);
                     } catch (loginErr) {
+                        console.error(loginErr);
                         alert("GMAIL 登入失敗：" + loginErr.message);
                     }
                 });
@@ -1780,7 +1772,8 @@
             if (unsubscribeTrades) unsubscribeTrades();
             if (unsubscribeAccounts) unsubscribeAccounts();
 
-            const tradesCol = collection(db, 'artifacts', appId, 'public', 'data', 'trades');
+            // 🔥 核心修改：將所有的路徑從 public/data/ 改為針對該登入信箱專屬的 users/UID/
+            const tradesCol = collection(db, 'artifacts', appId, 'users', user.uid, 'trades');
             unsubscribeTrades = onSnapshot(tradesCol, (snapshot) => {
                 let tempTrades = [];
                 snapshot.forEach(doc => {
@@ -1791,6 +1784,7 @@
                     trades = tempTrades;
                     localStorage.setItem('trading_data', JSON.stringify(trades));
                 } else if (trades.length > 0) {
+                    // 若雲端是空的（第一次登入），把本地單同步上去您的專屬帳號
                     trades.forEach(t => firestoreSaveTrade(t));
                 }
                 refreshDayState();
@@ -1798,7 +1792,8 @@
                 console.error("Firestore trades listener failed:", error);
             });
 
-            const accountsCol = collection(db, 'artifacts', appId, 'public', 'data', 'accounts');
+            // 🔥 核心修改：針對該登入信箱專屬的 users/UID/ 儲存帳戶設定
+            const accountsCol = collection(db, 'artifacts', appId, 'users', user.uid, 'accounts');
             unsubscribeAccounts = onSnapshot(accountsCol, (snapshot) => {
                 let tempAccounts = [];
                 snapshot.forEach(doc => {
@@ -1821,7 +1816,8 @@
         async function firestoreSaveTrade(trade) {
             if (!user) return;
             try {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'trades', trade.id);
+                // 🔥 將儲存路徑轉往使用者的專屬 UID 下
+                const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'trades', trade.id);
                 await setDoc(docRef, trade);
             } catch (err) {
                 console.error("Firestore save trade failure:", err);
@@ -1831,7 +1827,8 @@
         async function firestoreDeleteTrade(tradeId) {
             if (!user) return;
             try {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'trades', tradeId);
+                // 🔥 將刪除路徑轉往使用者的專屬 UID 下
+                const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'trades', tradeId);
                 await deleteDoc(docRef);
             } catch (err) {
                 console.error("Firestore delete trade failure:", err);
@@ -1841,7 +1838,8 @@
         async function firestoreSaveAccount(acc) {
             if (!user) return;
             try {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'accounts', acc.name);
+                // 🔥 將帳戶路徑轉往使用者的專屬 UID 下
+                const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'accounts', acc.name);
                 await setDoc(docRef, acc);
             } catch (err) {
                 console.error("Firestore save account failure:", err);
@@ -1851,7 +1849,7 @@
         async function firestoreDeleteAccount(accName) {
             if (!user) return;
             try {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'accounts', accName);
+                const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'accounts', accName);
                 await deleteDoc(docRef);
             } catch (err) {
                 console.error("Firestore delete account failure:", err);
@@ -3204,7 +3202,7 @@
                                     return value >= 0 ? '#00ffa3' : '#ff3b30';
                                 },
                                 font: { weight: '800', size: 10, family: 'monospace' },
-                                formatter: (value) => {
+                                fontFormatter: (value) => {
                                     if (value < 0) return '-$' + Math.abs(value);
                                     return '+$' + value;
                                 },
