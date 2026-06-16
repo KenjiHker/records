@@ -1208,7 +1208,7 @@
                 </svg>
                 使用 GMAIL 帳戶登入
             </button>
-            <div style="margin-top: 20px; font-size: 11px; color: #475569; font-weight: bold; letter-spacing: 1px;">Version v0.0.4</div>
+            <div style="margin-top: 20px; font-size: 11px; color: #475569; font-weight: bold; letter-spacing: 1px;">Version v0.0.5</div>
         </div>
     </div>
 
@@ -1658,6 +1658,7 @@
                 document.getElementById('googleLoginBtn').addEventListener('click', async () => {
                     try {
                         const provider = new GoogleAuthProvider();
+                        provider.setCustomParameters({ prompt: 'select_account' });
                         await signInWithPopup(auth, provider);
                     } catch (loginErr) {
                         console.error(loginErr);
@@ -1868,7 +1869,12 @@
             accounts.forEach(acc => {
                 let opt = document.createElement('option');
                 opt.value = acc.name;
-                opt.text = `💼 帳戶：${acc.name} (初始風控 $${acc.balance})`;
+                
+                let accTrades = trades.filter(t => t.account === acc.name);
+                let sumPnl = accTrades.reduce((sum, t) => sum + (Number(t.pnlAmount) || 0), 0);
+                let liveBalance = acc.balance + sumPnl;
+                
+                opt.text = `💼 帳戶：${acc.name} (當前剩餘額度 $${liveBalance})`;
                 if (acc.name === currentAccount) opt.selected = true;
                 select.appendChild(opt);
             });
