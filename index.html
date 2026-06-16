@@ -82,26 +82,20 @@
             letter-spacing: 2px;
         }
 
-        .password-container input {
-            width: 240px;
-            padding: 12px;
-            font-size: 18px;
-            text-align: center;
-            letter-spacing: 4px;
-            margin-bottom: 20px;
-        }
-
         .password-container button {
             background: linear-gradient(135deg, #00f2fe 0%, #4facfe 50%, #0052d4 100%);
             color: #fff;
             border: none;
-            padding: 12px 30px;
-            font-size: 15px;
+            padding: 14px 35px;
+            font-size: 16px;
             font-weight: 800;
             border-radius: 8px;
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(0, 242, 254, 0.4);
             transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .password-container button:hover {
@@ -1287,11 +1281,17 @@
 
     <div id="passwordOverlay">
         <div class="password-container">
-            <h2>輸入解鎖密碼</h2>
-            <input type="password" id="passwordInput" placeholder="••••••••" onkeydown="if(event.key==='Enter') verifyPassword()">
-            <br>
-            <button type="button" onclick="verifyPassword()">確認解鎖</button>
-            <div style="margin-top: 15px; font-size: 11px; color: #475569; font-weight: bold; letter-spacing: 1px;">Version v0.0.1</div>
+            <h2>帳戶身份認證</h2>
+            <button type="button" id="googleLoginBtn">
+                <svg width="18" height="18" viewBox="0 0 18 18" style="margin-right:2px; vertical-align:middle;">
+                    <path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.47h4.84c-.21 1.12-.84 2.07-1.79 2.73v2.27h2.9c1.69-2.66 2.69-6.57 2.69-10.63z"/>
+                    <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.27c-.8.54-1.83.87-3.06.87-2.33 0-4.3-1.57-5-3.69H.95v2.3C2.43 15.98 5.48 18 9 18z"/>
+                    <path fill="#FBBC05" d="M4 10.73a5.4 5.4 0 0 1 0-3.46V4.97H.95a9 9 0 0 0 0 8.06L4 10.73z"/>
+                    <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35L15 2A9 9 0 0 0 .95 4.97l3.05 2.3c.7-2.12 2.67-3.69 5-3.69z"/>
+                </svg>
+                使用 GMAIL 帳戶登入
+            </button>
+            <div style="margin-top: 20px; font-size: 11px; color: #475569; font-weight: bold; letter-spacing: 1px;">Version v0.0.1</div>
         </div>
     </div>
 
@@ -1677,10 +1677,9 @@
         </div>
     </div>
 
-    <!-- Firebase Connection & Application Logic as an ES Module -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         let fileHandleGlobal = null;
@@ -1736,19 +1735,26 @@
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                // Strictly login first
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
+                // Setup listener for authenticating via Google Sign-In
                 onAuthStateChanged(auth, (u) => {
                     user = u;
                     if (u) {
+                        document.getElementById('passwordOverlay').style.display = 'none';
                         setupFirestoreListeners();
+                    } else {
+                        document.getElementById('passwordOverlay').style.display = 'flex';
                     }
                 });
+
+                document.getElementById('googleLoginBtn').addEventListener('click', async () => {
+                    try {
+                        const provider = new GoogleAuthProvider();
+                        await signInWithPopup(auth, provider);
+                    } catch (loginErr) {
+                        alert("GMAIL 登入失敗：" + loginErr.message);
+                    }
+                });
+
             } catch (err) {
                 console.error("Firebase Connection/Authentication failed:", err);
             }
@@ -1763,7 +1769,6 @@
             if (unsubscribeTrades) unsubscribeTrades();
             if (unsubscribeAccounts) unsubscribeAccounts();
 
-            // Setup real-time listeners for collaborative public paths (Rule 1)
             const tradesCol = collection(db, 'artifacts', appId, 'public', 'data', 'trades');
             unsubscribeTrades = onSnapshot(tradesCol, (snapshot) => {
                 let tempTrades = [];
@@ -1775,7 +1780,6 @@
                     trades = tempTrades;
                     localStorage.setItem('trading_data', JSON.stringify(trades));
                 } else if (trades.length > 0) {
-                    // Provision local trades to cloud database if empty
                     trades.forEach(t => firestoreSaveTrade(t));
                 }
                 refreshDayState();
@@ -1794,7 +1798,6 @@
                     accounts = tempAccounts;
                     localStorage.setItem('trading_accounts_v2', JSON.stringify(accounts));
                 } else if (accounts.length > 0) {
-                    // Provision local accounts to cloud database if empty
                     accounts.forEach(a => firestoreSaveAccount(a));
                 }
                 renderAccountSelectorHTML();
@@ -1841,17 +1844,6 @@
                 await deleteDoc(docRef);
             } catch (err) {
                 console.error("Firestore delete account failure:", err);
-            }
-        }
-
-        function verifyPassword() {
-            const input = document.getElementById('passwordInput').value;
-            if (input === '11337799') {
-                document.getElementById('passwordOverlay').style.display = 'none';
-            } else {
-                alert('密碼錯誤，請重新輸入！');
-                document.getElementById('passwordInput').value = '';
-                document.getElementById('passwordInput').focus();
             }
         }
 
@@ -1936,7 +1928,6 @@
             refreshDayState();
             startLiveClock();
             initFirebase();
-            document.getElementById('passwordInput').focus();
         });
 
         function updateMonthDisplayLabelText(y, m) {
@@ -2036,7 +2027,6 @@
             }
             if (!confirm(`警告：您確定要刪除帳號 [${currentAccount}] 嗎？該帳號下的所有交易歷史數據也將同步被抹除！`)) return;
             
-            // Delete associated trades from Firestore
             let tradesToDelete = trades.filter(t => t.account === currentAccount);
             tradesToDelete.forEach(t => firestoreDeleteTrade(t.id));
 
@@ -2257,17 +2247,14 @@
             
             let filteredTrades = [...trades];
             
-            // 1. 過濾策略種類
             if (selectedStrat !== 'ALL') {
                 filteredTrades = filteredTrades.filter(t => (t.theory || '').toUpperCase() === selectedStrat.toUpperCase());
             }
             
-            // 2. 過濾策略模式
             if (selectedMode !== 'ALL') {
                 filteredTrades = filteredTrades.filter(t => (t.strategyMode || '').toUpperCase() === selectedMode.toUpperCase());
             }
             
-            // 3. 過濾多個時區 (需交集，亦即一筆單同時包含所有已設定的非 ALL 時區)
             const activeTfs = [tf1, tf2, tf3, tf4].filter(tf => tf !== 'ALL');
             if (activeTfs.length > 0) {
                 filteredTrades = filteredTrades.filter(t => {
@@ -2285,7 +2272,6 @@
                 });
             }
             
-            // 計算篩選結果勝率
             let wins = filteredTrades.filter(t => t.outcome === 'WIN').length;
             let total = filteredTrades.length;
             let wr = total > 0 ? ((wins / total) * 100).toFixed(0) + '%' : '0%';
@@ -2293,7 +2279,6 @@
             document.getElementById('wr_filtered').innerText = wr;
             document.getElementById('filtered_trades_count').innerText = total;
 
-            // 另外動態計算 5 個主要時區在當前 (策略+模式) 下的獨立胜率，方便對比
             const timeframes = ['1M', '5M', '15M', '1H', '4H'];
             timeframes.forEach(tf => {
                 let tfTrades = [...trades];
@@ -2315,7 +2300,6 @@
                 document.getElementById(`wr_${tf.toLowerCase()}`).innerText = tfWr;
             });
 
-            // 計算當前 (策略+模式) 整體勝率
             let allBaseTrades = [...trades];
             if (selectedStrat !== 'ALL') {
                 allBaseTrades = allBaseTrades.filter(t => (t.theory || '').toUpperCase() === selectedStrat.toUpperCase());
@@ -3331,7 +3315,6 @@
         }
 
         // Expose modules to global window context for inline events
-        window.verifyPassword = verifyPassword;
         window.onAccountSelectorChange = onAccountSelectorChange;
         window.addNewAccountPrompt = addNewAccountPrompt;
         window.deleteCurrentAccount = deleteCurrentAccount;
