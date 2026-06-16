@@ -1,0 +1,3180 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kenji Trading Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@0.7.0"></script>
+    
+    <style>
+        :root {
+            --bg-color: #04060a;
+            --card-bg: linear-gradient(135deg, #0d111d 0%, #06080e 100%);
+            --card-shadow: 
+                0 25px 55px rgba(0, 0, 0, 0.85), 
+                inset 0 1px 2px rgba(255, 255, 255, 0.05);
+            --text-color: #cbd5e1;
+            --primary-blue: #2563eb;
+            --primary-glow: rgba(37, 99, 235, 0.4);
+            --border-color: #1e293b;
+            
+            /* 霓虹鮮艷色彩定義 */
+            --neon-win-color: #00ffa3;
+            --neon-win-glow: rgba(0, 255, 163, 0.45);
+            --neon-loss-color: #ff3b30;
+            --neon-loss-glow: rgba(255, 59, 48, 0.45);
+            --neon-be-color: #ffcc00;
+            --neon-be-glow: rgba(255, 204, 0, 0.45);
+            --neon-zero-color: #00f2fe;
+            --neon-zero-glow: rgba(0, 242, 254, 0.3);
+
+            /* 加強版日曆極光色彩與統計框引用 */
+            --cal-win-bg: linear-gradient(145deg, rgba(0, 255, 163, 0.15) 0%, rgba(0, 60, 40, 0.35) 100%);
+            --cal-win-border: #00ffa3;
+            --cal-loss-bg: linear-gradient(145deg, rgba(255, 59, 48, 0.15) 0%, rgba(120, 15, 10, 0.35) 100%);
+            --cal-loss-border: #ff3b30;
+            --cal-zero-bg: linear-gradient(145deg, rgba(0, 242, 254, 0.1) 0%, rgba(2, 40, 60, 0.3) 100%);
+            --cal-zero-border: #00f2fe;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 24px;
+            background-image: 
+                radial-gradient(circle at 10% 10%, rgba(0, 242, 254, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 90% 90%, rgba(37, 99, 235, 0.1) 0%, transparent 50%);
+            background-attachment: fixed;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 密碼鎖遮罩樣式 */
+        #passwordOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #04060a;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .password-container {
+            background: linear-gradient(135deg, #0d111d 0%, #06080e 100%);
+            padding: 40px;
+            border-radius: 18px;
+            border: 1px solid rgba(0, 242, 254, 0.25);
+            box-shadow: 0 25px 55px rgba(0, 0, 0, 0.85);
+            text-align: center;
+        }
+
+        .password-container h2 {
+            margin-bottom: 24px;
+            color: #00f2fe;
+            font-weight: 800;
+            letter-spacing: 2px;
+        }
+
+        .password-container input {
+            width: 240px;
+            padding: 12px;
+            font-size: 18px;
+            text-align: center;
+            letter-spacing: 4px;
+            margin-bottom: 20px;
+        }
+
+        .password-container button {
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 50%, #0052d4 100%);
+            color: #fff;
+            border: none;
+            padding: 12px 30px;
+            font-size: 15px;
+            font-weight: 800;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.4);
+            transition: all 0.2s;
+        }
+
+        .password-container button:hover {
+            background: linear-gradient(135deg, #00ffa3 0%, #00f2fe 50%, #4facfe 100%);
+            color: #04060a;
+        }
+
+        /* 極致科幻極光 3D 懸浮主標題 */
+        h1 { 
+            text-align: center; 
+            font-size: 44px; 
+            margin-top: 10px;
+            margin-bottom: 35px; 
+            font-weight: 900;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, #ffffff 0%, #00f2fe 30%, #2563eb 65%, #9d4edd 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+            z-index: 1;
+            filter: drop-shadow(0px 15px 25px rgba(0, 0, 0, 0.8));
+            animation: titleGlowPulse 4s infinite alternate;
+        }
+
+        h1::before {
+            content: "Kenji Trading Dashboard";
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            z-index: -1;
+            background: linear-gradient(135deg, #ffffff 0%, #00f2fe 30%, #2563eb 65%, #9d4edd 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            transform: translate3d(2px, 2px, 0);
+            filter: blur(4px) opacity(0.8);
+        }
+
+        h1::after {
+            content: "Kenji Trading Dashboard";
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            z-index: -2;
+            background: linear-gradient(135deg, rgba(0, 242, 254, 0.6) 0%, rgba(157, 78, 221, 0.6) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            transform: translate3d(-3px, 4px, 0);
+            filter: blur(10px);
+        }
+
+        @keyframes titleGlowPulse {
+            0% { filter: drop-shadow(0px 10px 20px rgba(0, 242, 254, 0.3)); }
+            100% { filter: drop-shadow(0px 15px 35px rgba(157, 78, 221, 0.6)); }
+        }
+
+        /* 頂層版塊三欄式完美佈局架構：左(4), 中(4), 右(4) */
+        .dashboard-grid-top {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 28px;
+            max-width: 1750px;
+            margin: 0 auto 28px auto;
+            align-items: stretch;
+        }
+
+        .top-column-left {
+            grid-column: span 4;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-column-center {
+            grid-column: span 4;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        .top-column-right {
+            grid-column: span 4;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 底層滿格佈局架構 */
+        .dashboard-grid-bottom {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 28px;
+            max-width: 1750px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: var(--card-shadow);
+            box-sizing: border-box;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            transform: translateY(0);
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 35px 70px rgba(0, 0, 0, 0.9), inset 0 1px 2px rgba(255, 255, 255, 0.1);
+        }
+
+        .screenshot-combined-zone {
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            border-radius: 18px;
+            min-height: 290px;
+            box-sizing: border-box;
+        }
+
+        .stats-and-pie-card {
+            padding: 24px;
+            border-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            box-sizing: border-box;
+        }
+
+        .stats-left-part {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .pie-right-part {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .chart-full-width-card {
+            grid-column: span 12;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+
+        .mini-chart-wrapper {
+            background: linear-gradient(145deg, #05070b, #0d1017);
+            box-shadow: inset 0 6px 15px rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 340px;
+            box-sizing: border-box;
+            margin-top: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.01);
+        }
+        
+        .mini-chart-title {
+            font-size: 15px;
+            color: #00f2fe;
+            font-weight: 700;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .mini-bar-container { 
+            position: relative; 
+            width: 100%; 
+            flex-grow: 1; 
+            height: 260px; 
+        }
+
+        .chart-container-3d-wrapper {
+            position: relative;
+            width: 100%;
+            height: 240px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, #0f1626 0%, #050811 70%, #020307 100%);
+            border-radius: 24px;
+            padding: 16px;
+            box-shadow: 
+                0 20px 45px rgba(0, 0, 0, 0.8),
+                inset 0 0 30px rgba(0, 242, 254, 0.08),
+                0 0 1px 1px rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            box-sizing: border-box;
+        }
+
+        .chart-container-3d-canvas-box {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        /* Zella Score 底部控制面板與進度條排版 */
+        .zella-score-footer {
+            display: flex;
+            width: 100%;
+            margin-top: 16px;
+            align-items: center;
+            gap: 20px;
+            box-sizing: border-box;
+        }
+
+        .zella-big-numeric {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            min-width: 110px;
+        }
+
+        .zella-mini-lbl {
+            font-size: 11px;
+            color: #94a3b8;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .zella-glow-number {
+            font-size: 34px;
+            font-weight: 900;
+            font-family: 'Consolas', monospace;
+            color: #9d4edd;
+            text-shadow: 0 0 12px rgba(157, 78, 221, 0.8), 0 0 25px rgba(157, 78, 221, 0.4);
+        }
+
+        .zella-progress-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .zella-gradient-bar-wrapper {
+            position: relative;
+            width: 100%;
+            height: 10px;
+            background: linear-gradient(to right, #ff3b30, #ff9f43, #ffcc00, #00ffa3, #00f2fe);
+            border-radius: 5px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.6);
+        }
+
+        .zella-node-pointer {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            background: #ffffff;
+            border: 3px solid #9d4edd;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px #ffffff, 0 0 20px #9d4edd;
+            transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .zella-node-pointer-win {
+            border-color: #00ffa3 !important;
+            box-shadow: 0 0 10px #ffffff, 0 0 20px #00ffa3 !important;
+        }
+
+        .zella-node-pointer-loss {
+            border-color: #ff3b30 !important;
+            box-shadow: 0 0 10px #ffffff, 0 0 20px #ff3b30 !important;
+        }
+
+        .zella-scale-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #64748b;
+            font-family: monospace;
+            font-weight: 700;
+            padding: 0 2px;
+        }
+
+        /* 頁籤專屬按鈕 */
+        .order-tabs { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 12px; 
+            margin-bottom: 22px; 
+            background: rgba(0, 0, 0, 0.4);
+            padding: 10px;
+            border-radius: 12px;
+            box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.01);
+        }
+        
+        .tab-btn {
+            background: linear-gradient(135deg, #1e2638 0%, #0d121d 100%);
+            color: #94a3b8;
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+            border-right: 2px solid rgba(0, 0, 0, 0.6);
+            border-bottom: 3px solid rgba(0, 0, 0, 0.7);
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
+            transition: all 0.15s ease;
+            transform: translateY(-2px);
+        }
+        .tab-btn:hover { 
+            color: #fff; 
+            background: linear-gradient(135deg, #28334a 0%, #131a29 100%); 
+            transform: translateY(-3px); 
+        }
+        
+        .tab-btn.active {
+            background: linear-gradient(135deg, #090e17 0%, #03050a 100%) !important;
+            color: #00f2fe !important;
+            border-top: 2px solid rgba(0, 0, 0, 0.8) !important;
+            border-left: 2px solid rgba(0, 0, 0, 0.7) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.01) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.01) !important;
+            box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.9) !important;
+            transform: translateY(2px) !important;
+        }
+        .tab-btn.append-tab { 
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); 
+            color: white; 
+            border-top: 1px solid rgba(255, 255, 255, 0.25);
+        }
+        .tab-btn.append-tab:hover {
+            background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);
+        }
+        .tab-btn.append-tab.active {
+            background: linear-gradient(135deg, #090e17 0%, #03050a 100%) !important;
+            color: #00f2fe !important;
+            border-top: 2px solid rgba(0, 0, 0, 0.8) !important;
+            border-left: 2px solid rgba(0, 0, 0, 0.7) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.01) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.01) !important;
+            box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.9) !important;
+            transform: translateY(2px) !important;
+        }
+
+        /* 底部數據切換按鈕美化與漸變色填滿 */
+        #btn_tab_monthly {
+            background: linear-gradient(135deg, rgba(13, 148, 136, 0.2) 0%, rgba(15, 118, 110, 0.4) 100%);
+            border: 1px solid rgba(13, 148, 136, 0.4);
+            color: #2dd4bf;
+            box-shadow: 0 4px 10px rgba(13, 148, 136, 0.15);
+        }
+        #btn_tab_monthly:hover {
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 50%, #e11d48 100%) !important;
+            color: #000000 !important;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(168, 85, 247, 0.5);
+        }
+        #btn_tab_monthly.active {
+            background: linear-gradient(135deg, #0d9488 0%, #115e59 100%) !important;
+            color: #ffffff !important;
+            border-color: #2dd4bf !important;
+            box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.85) !important;
+        }
+
+        #btn_tab_equity {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(67, 56, 202, 0.4) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            color: #818cf8;
+            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.15);
+        }
+        #btn_tab_equity:hover {
+            background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 50%, #10b981 100%) !important;
+            color: #000000 !important;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
+        }
+        #btn_tab_equity.active {
+            background: linear-gradient(135deg, #4338ca 0%, #312e81 100%) !important;
+            color: #ffffff !important;
+            border-color: #818cf8 !important;
+            box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.85) !important;
+        }
+
+        /* "New Trade" 版塊下的區域按鈕與效果賽步霓虹特化美化 */
+        #orderTabsZone.order-tabs {
+            background: rgba(4, 6, 10, 0.75);
+            padding: 8px;
+            border-radius: 14px;
+            border: 1px solid rgba(30, 41, 59, 0.7);
+            gap: 10px;
+            box-shadow: inset 0 4px 20px rgba(0, 0, 0, 0.9);
+        }
+
+        #orderTabsZone .tab-btn {
+            flex: 1;
+            min-width: calc(50% - 5px);
+            padding: 12px 10px;
+            font-size: 12.5px;
+            letter-spacing: 0.5px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            text-align: center;
+            box-sizing: border-box;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transform: translateY(-4px);
+            box-shadow: 
+                0 6px 12px rgba(0, 0, 0, 0.5), 
+                inset 0 1.5px 2px rgba(255, 255, 255, 0.08),
+                0 4px 0 rgba(0, 0, 0, 0.7);
+        }
+
+        /* 預設非激活下的顏色狀態 - 歷史單點選按鈕基本樣式 */
+        #orderTabsZone .tab-btn:not(.append-tab) {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.2) 100%);
+            border: 1px solid rgba(71, 85, 105, 0.3);
+            color: #94a3b8;
+        }
+
+        /* 預設 Win 的單子顏色 (綠色) */
+        #orderTabsZone .tab-btn.default-win-pnl {
+            background: linear-gradient(135deg, rgba(0, 255, 163, 0.08) 0%, rgba(0, 40, 25, 0.15) 100%);
+            border: 1px solid rgba(0, 255, 163, 0.3);
+            color: rgba(0, 255, 163, 0.7);
+            box-shadow: 
+                0 6px 12px rgba(0, 0, 0, 0.5), 
+                inset 0 1.5px 2px rgba(0, 255, 163, 0.05),
+                0 4px 0 rgba(0, 0, 0, 0.7);
+        }
+
+        /* 預設 Loss 的單子顏色 (紅色) */
+        #orderTabsZone .tab-btn.default-loss-pnl {
+            background: linear-gradient(135deg, rgba(255, 59, 48, 0.08) 0%, rgba(80, 10, 5, 0.15) 100%);
+            border: 1px solid rgba(255, 59, 48, 0.3);
+            color: rgba(255, 59, 48, 0.7);
+            box-shadow: 
+                0 6px 12px rgba(0, 0, 0, 0.5), 
+                inset 0 1.5px 2px rgba(255, 59, 48, 0.05),
+                0 4px 0 rgba(0, 0, 0, 0.7);
+        }
+
+        /* 預設 BE 的單子顏色 (灰色) */
+        #orderTabsZone .tab-btn.default-be-pnl {
+            background: linear-gradient(135deg, rgba(148, 163, 184, 0.06) 0%, rgba(30, 41, 59, 0.15) 100%);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            color: rgba(148, 163, 184, 0.7);
+            box-shadow: 
+                0 6px 12px rgba(0, 0, 0, 0.5), 
+                inset 0 1.5px 2px rgba(148, 163, 184, 0.05),
+                0 4px 0 rgba(0, 0, 0, 0.7);
+        }
+
+        #orderTabsZone .tab-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 
+                0 8px 16px rgba(0, 0, 0, 0.6), 
+                inset 0 1.5px 2px rgba(255, 255, 255, 0.12),
+                0 5px 0 rgba(0, 0, 0, 0.8);
+        }
+
+        #orderTabsZone .tab-btn.default-win-pnl:hover {
+            background: linear-gradient(135deg, #00ffa3 0%, #00f2fe 100%) !important;
+            color: #000000 !important;
+            border-color: #00ffa3 !important;
+            box-shadow: 0 8px 25px rgba(0, 255, 163, 0.5);
+        }
+
+        #orderTabsZone .tab-btn.default-loss-pnl:hover {
+            background: linear-gradient(135deg, #ff3b30 0%, #ff793f 100%) !important;
+            color: #000000 !important;
+            border-color: #ff3b30 !important;
+            box-shadow: 0 8px 25px rgba(255, 59, 48, 0.5);
+        }
+
+        #orderTabsZone .tab-btn.default-be-pnl:hover {
+            background: linear-gradient(135deg, #ffcc00 0%, #fffc00 100%) !important;
+            color: #000000 !important;
+            border-color: #ffcc00 !important;
+            box-shadow: 0 8px 25px rgba(255, 204, 0, 0.5);
+        }
+
+        /* New Trade (創造狀態) 按鈕特別美化 */
+        #orderTabsZone .tab-btn.append-tab {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.2) 0%, rgba(29, 78, 216, 0.05) 100%);
+            border: 1px solid rgba(37, 99, 235, 0.4);
+            color: #3b82f6;
+            text-shadow: 0 0 8px rgba(37, 99, 235, 0.4);
+        }
+
+        #orderTabsZone .tab-btn.append-tab:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #60a5fa 100%) !important;
+            color: #000000 !important;
+            border-color: #60a5fa !important;
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.5);
+        }
+
+        /* 緩慢地凹下去激活狀態 (按下時效果) */
+        #orderTabsZone .tab-btn.active {
+            transform: translateY(2px) !important;
+            box-shadow: 
+                inset 0 4px 10px rgba(0, 0, 0, 0.9), 
+                0 0 1px rgba(0, 0, 0, 0.5),
+                0 0px 0 transparent !important;
+            font-weight: 800;
+            color: #ffffff !important;
+        }
+
+        /* New Trade 按下時激活特化 */
+        #orderTabsZone .tab-btn.append-tab.active {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+            border-color: #60a5fa !important;
+            color: #ffffff !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+            box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.85), 0 0 8px rgba(37, 99, 235, 0.3) !important;
+        }
+
+        /* 綠色 WIN 激活特化 */
+        #orderTabsZone .tab-btn.active-win-pnl {
+            background: linear-gradient(135deg, rgba(0, 255, 163, 0.35) 0%, rgba(0, 60, 40, 0.5) 100%) !important;
+            border: 1px solid #00ffa3 !important;
+            box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.85), 0 0 20px rgba(0, 255, 163, 0.45) !important;
+            text-shadow: 0 0 6px rgba(0, 255, 163, 0.9);
+            color: #ffffff !important;
+        }
+
+        /* 紅色 LOSS 激活特化 */
+        #orderTabsZone .tab-btn.active-loss-pnl {
+            background: linear-gradient(135deg, rgba(255, 59, 48, 0.35) 0%, rgba(120, 15, 10, 0.5) 100%) !important;
+            border: 1px solid #ff3b30 !important;
+            box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.85), 0 0 20px rgba(255, 59, 48, 0.45) !important;
+            text-shadow: 0 0 6px rgba(255, 59, 48, 0.9);
+            color: #ffffff !important;
+        }
+
+        /* 灰色 BE 激活特化 */
+        #orderTabsZone .tab-btn.active-be-pnl {
+            background: linear-gradient(135deg, rgba(148, 163, 184, 0.3) 0%, rgba(45, 55, 72, 0.5) 100%) !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.85), 0 0 15px rgba(148, 163, 184, 0.3) !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+            color: #ffffff !important;
+        }
+
+        .form-group { margin-bottom: 16px; }
+        label { display: block; margin-bottom: 8px; font-weight: 700; font-size: 13.5px; color: #94a3b8; letter-spacing: 0.5px; }
+        label .required-star { color: #ff3b30; margin-left: 4px; }
+        
+        .form-row-split {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .form-row-split .form-group {
+            flex: 1;
+            margin-bottom: 0;
+            min-width: 0;
+        }
+
+        .timeframe-grid-layout {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        input, select {
+            width: 100%; padding: 12px; 
+            background: #020306 !important;
+            border: 1px solid #1e293b;
+            box-shadow: inset 0 3px 6px rgba(0,0,0,0.7);
+            color: #fff !important; 
+            border-radius: 8px; 
+            box-sizing: border-box; 
+            font-size: 14px;
+            font-weight: 600;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5), 0 0 12px var(--primary-glow);
+        }
+
+        /* 頂級量子霓虹按鈕美化樣式 */
+        .btn-submit {
+            width: 100%; padding: 14px; 
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 50%, #0052d4 100%);
+            color: #ffffff; border: none; border-radius: 12px; 
+            font-size: 15px; font-weight: 800; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); margin-bottom: 12px;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            border-bottom: 3px solid rgba(0, 0, 0, 0.4);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+        }
+        .btn-submit:hover { 
+            background: linear-gradient(135deg, #00ffa3 0%, #00f2fe 50%, #4facfe 100%); 
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 255, 163, 0.5), 0 0 15px rgba(0, 242, 254, 0.6);
+            color: #04060a;
+            text-shadow: none;
+        }
+        .btn-submit:active {
+            transform: translateY(1px);
+            border-bottom-width: 1px;
+            box-shadow: 0 2px 8px rgba(0, 242, 254, 0.3);
+        }
+        
+        /* 頁面流暢融合修改模式按鈕 */
+        .btn-submit.btn-edit-mode { 
+            background: linear-gradient(135deg, #f12711 0%, #f5af19 100%);
+            box-shadow: 0 4px 15px rgba(245, 175, 25, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+            border-bottom-color: rgba(0, 0, 0, 0.4);
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+        }
+        .btn-submit.btn-edit-mode:hover {
+            background: linear-gradient(135deg, #3b82f6 0%, #9333ea 50%, #f43f5e 100%) !important;
+            box-shadow: 0 8px 25px rgba(147, 51, 234, 0.6);
+            color: #000000 !important;
+            text-shadow: none;
+        }
+
+        .btn-return-style {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
+            box-shadow: 0 4px 15px rgba(56, 239, 125, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.2) !important;
+            border-bottom: 3px solid rgba(0, 0, 0, 0.3) !important;
+        }
+        .btn-return-style:hover {
+            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 50%, #ec4899 100%) !important;
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.6) !important;
+            color: #000000 !important;
+        }
+
+        .delete-zone { margin-top: 14px; padding-top: 14px; border-top: 1px dashed #222c3c; }
+        
+        .btn-delete-order {
+            width: 100%; padding: 14px; 
+            background: linear-gradient(135deg, #cb2d3e 0%, #ef473a 100%);
+            color: #fff; border: none; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(239, 71, 58, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            letter-spacing: 1px;
+            border-bottom: 3px solid rgba(0, 0, 0, 0.3);
+        }
+        .btn-delete-order:hover { 
+            background: linear-gradient(135deg, #14b8a6 0%, #06b6d4 50%, #3b82f6 100%) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(6, 182, 212, 0.6);
+            color: #000000 !important;
+        }
+
+        .btn-danger-mini-red {
+            background: linear-gradient(135deg, #ff3b30 0%, #990000 100%) !important;
+            box-shadow: 0 4px 10px rgba(255, 59, 48, 0.25) !important;
+        }
+        .btn-danger-mini-red:hover {
+            background: linear-gradient(135deg, #e11d48 0%, #f43f5e 50%, #f472b6 100%) !important;
+            color: #000000 !important;
+            box-shadow: 0 6px 20px rgba(244, 63, 94, 0.6) !important;
+        }
+
+        .btn-import-mini-green {
+            background: linear-gradient(135deg, #00ffa3 0%, #00663d 100%) !important;
+            box-shadow: 0 4px 10px rgba(0, 255, 163, 0.25) !important;
+            color: #ffffff !important;
+        }
+        .btn-import-mini-green:hover {
+            background: linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%) !important;
+            color: #000000 !important;
+            box-shadow: 0 6px 20px rgba(249, 115, 22, 0.6) !important;
+        }
+
+        .calendar-picker-wrapper { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; position: relative; }
+        .calendar-picker-wrapper h3 { margin: 0; font-size: 20px; font-weight: 800; color: #fff; }
+        
+        .month-picker-container {
+            position: relative;
+            display: inline-block;
+        }
+        .month-display-bridge {
+            padding: 8px 14px;
+            font-size: 13px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #0d121d 0%, #03050a 100%);
+            border: 1px solid #1e293b;
+            color: #00f2fe;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            cursor: pointer;
+            pointer-events: none;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+        .month-selector-input { 
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            color-scheme: dark;
+        }
+
+        .side-stat-zone { display: flex; flex-direction: column; gap: 10px; }
+        .stat-summary-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; text-align: center; }
+        
+        /* 引用 Profit & Loss Calendar 加架版樣式的高階統計框 */
+        .stat-summary-row .stat-box { 
+            padding: 14px 4px; 
+            border-radius: 12px; 
+            font-size: 13px; 
+            font-weight: 800; 
+            box-sizing: border-box;
+            background: linear-gradient(145deg, #0a0d16, #04060a);
+            border: 1px solid #1e293b;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .stat-summary-row .stat-box:hover {
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.6);
+        }
+        
+        .stat-box-title {
+            font-size: 10px;
+            color: #64748b;
+            font-weight: 800;
+            text-transform: uppercase;
+            white-space: nowrap;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-box-value {
+            font-size: 14px;
+            font-family: 'Consolas', monospace;
+            font-weight: 900;
+        }
+
+        /* 引用日曆極光配色 */
+        .stat-box.neon-glow-win { 
+            background: var(--cal-win-bg) !important;
+            border: 1px solid var(--cal-win-border) !important;
+            box-shadow: 0 4px 12px rgba(0, 255, 163, 0.15) !important;
+        }
+        .stat-box.neon-glow-win .stat-box-value { color: var(--neon-win-color) !important; text-shadow: 0 0 6px rgba(0, 255, 163, 0.6); }
+        
+        .stat-box.neon-glow-loss { 
+            background: var(--cal-loss-bg) !important;
+            border: 1px solid var(--cal-loss-border) !important;
+            box-shadow: 0 4px 12px rgba(255, 59, 48, 0.15) !important;
+        }
+        .stat-box.neon-glow-loss .stat-box-value { color: var(--neon-loss-color) !important; text-shadow: 0 0 6px rgba(255, 59, 48, 0.6); }
+        
+        .stat-box.neon-glow-zero { 
+            background: var(--cal-zero-bg) !important;
+            border: 1px solid var(--cal-zero-border) !important;
+            box-shadow: 0 4px 12px rgba(0, 242, 254, 0.1) !important;
+        }
+        .stat-box.neon-glow-zero .stat-box-value { color: var(--neon-zero-color) !important; text-shadow: 0 0 6px rgba(0, 242, 254, 0.5); }
+
+        .stat-section-title { 
+            font-size: 11px; 
+            color: #4facfe; 
+            font-weight: 800; 
+            margin: 2px 0 2px 0; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; }
+
+        /* 盈虧日曆美化與極光色彩加強樣式 */
+        .calendar-header {
+            display: grid; grid-template-columns: repeat(7, 1fr);
+            text-align: center; font-weight: 800; margin-bottom: 12px; 
+            background: linear-gradient(145deg, #0e1322, #060911); 
+            padding: 12px 0; border-radius: 8px; font-size: 12px;
+            color: #64748b;
+            border: 1px solid rgba(255,255,255,0.02);
+            text-transform: uppercase;
+        }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .day-box {
+            background: linear-gradient(145deg, #0a0d16, #04060a); border: 1px solid #1e293b;
+            border-radius: 10px; min-height: 85px; padding: 6px;
+            display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box; cursor: pointer; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4); transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .day-box:hover { transform: translateY(-3px) scale(1.02); border-color: #3b82f6; box-shadow: 0 8px 20px rgba(0,0,0,0.7); }
+        .day-box.selected-box { border-color: #00f2fe !important; box-shadow: 0 0 16px rgba(0, 242, 254, 0.6) !important; transform: scale(1.01); }
+        
+        .day-num { font-weight: 800; font-size: 12px; color: #cbd5e1; }
+        .day-wr { font-size: 10px; color: #00f2fe; font-weight: 800; text-align: center; }
+        .day-status { font-size: 10px; text-align: center; color: #334155; font-weight: 600; text-transform: uppercase; }
+        .day-r-val { font-size: 11px; font-weight: 900; text-align: center; font-family: 'Consolas', monospace; }
+        .day-r-win { color: #00ffa3; text-shadow: 0 0 6px rgba(0, 255, 163, 0.6); } .day-r-loss { color: #ff3b30; text-shadow: 0 0 6px rgba(255, 59, 48, 0.6); }
+        .day-pnl { font-size: 10px; font-weight: 800; text-align: center; font-family: 'Consolas', monospace; }
+        .day-count-label { font-size: 9px; font-weight: 700; text-align: center; color: #64748b; margin-top: 1px; }
+
+        .day-box.win-day { 
+            background: var(--cal-win-bg); 
+            border-color: var(--cal-win-border); 
+            box-shadow: 0 4px 12px rgba(0, 255, 163, 0.15), inset 0 0 10px rgba(0, 255, 163, 0.05);
+        }
+        .day-box.win-day:hover {
+            box-shadow: 0 8px 24px rgba(0, 255, 163, 0.4), inset 0 0 15px rgba(0, 255, 163, 0.1);
+        }
+        .day-box.loss-day { 
+            background: var(--cal-loss-bg); 
+            border-color: var(--cal-loss-border); 
+            box-shadow: 0 4px 12px rgba(255, 59, 48, 0.15), inset 0 0 10px rgba(255, 59, 48, 0.05);
+        }
+        .day-box.loss-day:hover {
+            box-shadow: 0 8px 24px rgba(255, 59, 48, 0.4), inset 0 0 15px rgba(255, 59, 48, 0.1);
+        }
+        .day-box.be-day { background: linear-gradient(145deg, #131a26, #090d14); border-color: #2d3748; }
+        
+        .day-box.other-month-day { 
+            opacity: 0.25; 
+            background: #020407; 
+            border: 1px dashed #242b35; 
+        }
+        .day-box.other-month-day .day-num { color: #334155 !important; }
+
+        #screenshotContent {
+            flex-grow: 1; display: flex; align-items: center; justify-content: center; overflow: hidden;
+            height: 180px; background: #020306; border-radius: 10px; box-shadow: inset 0 4px 10px rgba(0,0,0,0.7);
+            border: 1px solid #1e293b;
+        }
+        .screenshot-preview { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; cursor: pointer; }
+
+        .account-manage-box { background: linear-gradient(145deg, #060912, #0d1222); border: 1px solid #1e293b; box-shadow: inset 0 2px 5px rgba(0,0,0,0.6); border-radius: 12px; padding: 14px; margin-bottom: 16px; }
+        .account-manage-title { font-size: 13px; color: #00f2fe; font-weight: 700; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .account-action-row { display: flex; gap: 10px; margin-top: 12px; }
+        
+        /* 迷你帳戶操作按鈕基礎與美化樣式 */
+        .btn-mini { padding: 8px 14px; font-size: 11.5px; background: linear-gradient(145deg, #1e293b, #0f172a); color: #fff; border: 1px solid rgba(255,255,255,0.03); border-radius: 6px; cursor: pointer; font-weight: 700; transition: all 0.2s; }
+        
+        .btn-add-account {
+            background: linear-gradient(135deg, #e11d48 0%, #be123c 100%) !important;
+            box-shadow: 0 4px 10px rgba(225, 29, 72, 0.3) !important;
+            border: 1px solid rgba(244, 63, 94, 0.4) !important;
+        }
+        .btn-add-account:hover {
+            background: linear-gradient(135deg, #10b981 0%, #06b6d4 50%, #3b82f6 100%) !important;
+            color: #000000 !important;
+            box-shadow: 0 6px 18px rgba(6, 182, 212, 0.6) !important;
+        }
+
+        /* 賽步美化：風控與剩餘額度面板 */
+        .account-balance-panel {
+            background: linear-gradient(145deg, #020408, #0b0f19);
+            border: 1px solid #1e293b;
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.8);
+        }
+        .balance-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .balance-label {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .balance-value {
+            font-size: 16px;
+            font-family: 'Consolas', monospace;
+            font-weight: 900;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
+        }
+
+        /* 一鍵同步複製版塊賽步美化 */
+        .sync-accounts-container { 
+            background: linear-gradient(135deg, rgba(251, 146, 60, 0.05) 0%, rgba(13, 18, 30, 0.8) 100%); 
+            border: 1px solid rgba(251, 146, 60, 0.2); 
+            border-radius: 12px;
+            padding: 14px; 
+            margin-top: 14px; 
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(251, 146, 60, 0.1);
+        }
+        .sync-title { 
+            font-size: 12px; 
+            color: #fb923c; 
+            font-weight: 800; 
+            margin-bottom: 10px; 
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            text-shadow: 0 0 8px rgba(251, 146, 60, 0.3);
+        }
+        .sync-checkbox-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+        .sync-label { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            cursor: pointer; 
+            font-size: 12px; 
+            color: #cbd5e1; 
+            font-weight: 700; 
+            background: rgba(0, 0, 0, 0.4);
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            transition: all 0.2s ease;
+        }
+        .sync-label:hover {
+            border-color: rgba(251, 146, 60, 0.5);
+            background: rgba(251, 146, 60, 0.05);
+            color: #fff;
+        }
+        .sync-label input[type="checkbox"] { 
+            width: 15px; 
+            height: 15px; 
+            margin: 0; 
+            cursor: pointer; 
+            accent-color: #fb923c;
+        }
+        .tip-text { text-align: center; color: #475569; font-size: 11px; margin-top: 12px; font-weight: 500; line-height: 1.3; }
+
+        @keyframes fileSystemAlertFlash {
+            0% { 
+                border-color: rgba(255, 59, 48, 0.3); 
+                box-shadow: 0 0 4px rgba(255, 59, 48, 0.1); 
+            }
+            100% { 
+                border-color: #ff3b30; 
+                box-shadow: 0 0 25px #ff3b30, inset 0 0 15px rgba(255, 59, 48, 0.4); 
+            }
+        }
+        
+        /* 本地檔案無縫覆蓋系統功能區域美化 */
+        .file-sync-panel {
+            background: linear-gradient(135deg, rgba(13, 17, 29, 0.95) 0%, rgba(6, 9, 15, 0.9) 100%);
+            border: 1px solid rgba(0, 242, 254, 0.25);
+            border-radius: 14px;
+            padding: 16px;
+            margin-top: 18px;
+            box-sizing: border-box;
+            width: 100%;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .file-sync-panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 242, 254, 0.4), transparent);
+        }
+        
+        .file-sync-panel.alert-flash {
+            animation: fileSystemAlertFlash 0.5s infinite alternate !important;
+        }
+        
+        .file-sync-title {
+            font-size: 13.5px;
+            color: #00f2fe;
+            font-weight: 800;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+            text-shadow: 0 0 8px rgba(0, 242, 254, 0.3);
+        }
+        
+        .file-status-badge { 
+            font-size: 11px; 
+            padding: 3px 8px; 
+            border-radius: 6px; 
+            font-weight: 700; 
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        
+        .file-status-unlinked { 
+            background: rgba(255, 59, 48, 0.12); 
+            color: #ff3b30; 
+            border: 1px solid rgba(255, 59, 48, 0.3); 
+            text-shadow: 0 0 6px rgba(255, 59, 48, 0.4);
+        }
+        
+        .file-status-linked { 
+            background: rgba(0, 255, 163, 0.12); 
+            color: #00ffa3; 
+            border: 1px solid rgba(0, 255, 163, 0.3); 
+            text-shadow: 0 0 6px rgba(0, 255, 163, 0.4);
+        }
+
+        /* 本地檔案覆蓋系統按鈕特化美化 */
+        .btn-file-link {
+            width: 100%;
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #075985 100%);
+            color: #fff;
+            padding: 10px 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+            border-bottom: 2px solid rgba(0, 0, 0, 0.4);
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-file-link:hover {
+            background: linear-gradient(135deg, #ec4899 0%, #f43f5e 50%, #f472b6 100%) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(244, 63, 94, 0.5);
+            color: #000000 !important;
+        }
+
+        #hiddenFileInput { display: none; }
+
+        .intraday-bar-panel {
+            width: 100%;
+            background: linear-gradient(145deg, #05070b, #0d1017);
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.8);
+            border: 1px solid rgba(255,255,255,0.02);
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 15px;
+            box-sizing: border-box;
+        }
+
+        /* 歷史表格與策略篩選控制區樣式 */
+        .history-table-header-control {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .strategy-winrate-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(13, 19, 34, 0.8);
+            padding: 8px 14px;
+            border-radius: 10px;
+            border: 1px solid #1e293b;
+            font-size: 12px;
+            flex-wrap: wrap;
+        }
+        .strategy-select-mini {
+            width: auto;
+            padding: 4px 8px;
+            font-size: 12px;
+            background: #020306 !important;
+            border: 1px solid #1e293b;
+            color: #00f2fe !important;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .winrate-indicator-item {
+            font-weight: 800;
+            color: #cbd5e1;
+        }
+        .winrate-indicator-item span {
+            color: #00ffa3;
+            font-family: monospace;
+            margin-left: 2px;
+        }
+
+        /* 歷史表格固定高度且支持上下滾動 */
+        .trade-data-table-wrapper {
+            width: 100%;
+            height: 368px;
+            overflow-y: auto;
+            background: linear-gradient(145deg, #070b14, #03050a);
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            box-sizing: border-box;
+            padding: 0;
+            margin-bottom: 14px;
+            box-shadow: inset 0 4px 15px rgba(0,0,0,0.8);
+        }
+        .trade-data-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 12px;
+        }
+        .trade-data-table th {
+            background-color: #0d1322;
+            color: #00f2fe;
+            padding: 8px;
+            font-weight: 700;
+            border-bottom: 2px solid #1e293b;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        .trade-data-table td {
+            padding: 8px;
+            border-bottom: 1px solid #131a26;
+            color: #cbd5e1;
+            font-weight: 600;
+        }
+        .trade-data-table tr:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+        
+        .trade-data-table-wrapper::-webkit-scrollbar { width: 6px; }
+        .trade-data-table-wrapper::-webkit-scrollbar-track { background: #04060a; }
+        .trade-data-table-wrapper::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+        .trade-data-table-wrapper::-webkit-scrollbar-thumb:hover { background: #334155; }
+        
+        .tv-link-anchor {
+            color: #00f2fe;
+            text-decoration: none;
+            border-bottom: 1px dashed #00f2fe;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .tv-link-anchor:hover {
+            color: #00ffa3;
+            border-bottom-color: #00ffa3;
+        }
+
+        /* 雙輸入框並排佈局 */
+        .datetime-picker-row {
+            display: flex;
+            gap: 12px;
+        }
+        .datetime-picker-row input[type="date"] {
+            color-scheme: dark;
+        }
+        .datetime-picker-row input[type="text"] {
+            text-align: center;
+        }
+        
+        .account-clickable-cell {
+            color: #00f2fe;
+            text-decoration: underline;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .account-clickable-cell:hover {
+            color: #00ffa3;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="passwordOverlay">
+        <div class="password-container">
+            <h2>輸入解鎖密碼</h2>
+            <input type="password" id="passwordInput" placeholder="••••••••" onkeydown="if(event.key==='Enter') verifyPassword()">
+            <br>
+            <button type="button" onclick="verifyPassword()">確認解鎖</button>
+            <div style="margin-top: 15px; font-size: 11px; color: #475569; font-weight: bold; letter-spacing: 1px;">Version v0.0.1</div>
+        </div>
+    </div>
+
+    <h1>Kenji Trading Dashboard</h1>
+
+    <div class="dashboard-grid-top">
+        
+        <div class="top-column-left card">
+            <div class="account-manage-box">
+                <div class="account-manage-title">
+                    <span>💳 當前操作帳號設定</span>
+                    <button type="button" class="btn-mini btn-add-account" onclick="addNewAccountPrompt()">➕ 新增帳號</button>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <select id="currentAccountSelect" onchange="onAccountSelectorChange()"></select>
+                </div>
+                
+                <div class="account-balance-panel">
+                    <div class="balance-row">
+                        <span class="balance-label">初始可用風控額 (Initial):</span>
+                        <span class="balance-value" id="currentInitialBalance" style="color: #00f2fe;">$0</span>
+                    </div>
+                    <div class="balance-row">
+                        <span class="balance-label">當前剩餘額度 (Live Balance):</span>
+                        <span class="balance-value" id="currentLiveBalance" style="color: #fff;">$0</span>
+                    </div>
+                </div>
+
+                <div class="account-action-row">
+                    <button type="button" class="btn-mini btn-danger-mini-red" style="flex: 1;" onclick="deleteCurrentAccount()">🗑️ 刪除帳號</button>
+                    <button type="button" class="btn-mini btn-import-mini-green" style="flex: 1;" onclick="triggerFileInput()">📥 匯入數據</button>
+                    <input type="file" id="hiddenFileInput" accept=".json" onchange="importTradingData(event)">
+                </div>
+
+                <div class="sync-accounts-container" id="syncAccountsZone">
+                    <div class="sync-title">🔀 追加新單時，一鍵同步複製到 (選填)：</div>
+                    <div class="sync-checkbox-grid" id="syncCheckboxGrid"></div>
+                </div>
+            </div>
+
+            <h3 id="formTitle" style="margin-top:5px; margin-bottom:12px; color:#fff; font-weight:800;">New Trade</h3>
+            
+            <div class="order-tabs" id="orderTabsZone"></div>
+
+            <form id="tradeForm" style="display: flex; flex-direction: column; justify-content: space-between;" onsubmit="handleFormSubmit(event)">
+                <div>
+                    <div class="form-group">
+                        <label>Date & Time</label>
+                        <div class="datetime-picker-row">
+                            <input type="date" id="tradeDateInput" onchange="onTradeDateInputChange()">
+                            <input type="text" id="liveDateTimeStr" placeholder="00:00:00" onfocus="pauseLiveClock()" onblur="resumeLiveClock()" oninput="formatLiveTimeInput(this)">
+                        </div>
+                    </div>
+
+                    <div class="form-row-split">
+                        <div class="form-group">
+                            <label>商品代號 (Symbol)<span class="required-star">*</span></label>
+                            <select id="symbol" required>
+                                <option value="NQ" selected>NQ (Nasdaq / 納指)</option>
+                                <option value="GC">GC (Gold / 黃金)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>交易結果 (Outcome)<span class="required-star">*</span></label>
+                            <select id="outcome" onchange="autoAdjustSign()" required>
+                                <option value="WIN" selected>WIN</option>
+                                <option value="LOSS">LOSS</option>
+                                <option value="BE">BE</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row-split">
+                        <div class="form-group">
+                            <label>實際賺蝕金額<span class="required-star">*</span></label>
+                            <input type="text" id="pnlAmount" placeholder="請填寫金額" oninput="this.value=this.value.replace(/[^\d-]/g,''); autoAdjustSign();" required>
+                        </div>
+                        <div class="form-group">
+                            <label>方向 (Position)<span class="required-star">*</span></label>
+                            <select id="position" required>
+                                <option value="Long" selected>Long</option>
+                                <option value="Short">Short</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row-split">
+                        <div class="form-group">
+                            <label>獲利/虧損 R 數<span class="required-star">*</span></label>
+                            <input type="text" id="rValue" placeholder="請輸入 R 數" oninput="this.value=this.value.replace(/[^\d.-]/g,''); autoAdjustSign();" required>
+                        </div>
+                        <div class="form-group" style="display: flex; gap: 8px;">
+                            <div style="flex: 1;">
+                                <label>策略 (Strategy)<span class="required-star">*</span></label>
+                                <select id="theory" required>
+                                    <option value="OB" selected>OB</option>
+                                    <option value="ORB">ORB</option>
+                                    <option value="無跟策略">無跟策略</option>
+                                </select>
+                            </div>
+                            <div style="flex: 1;">
+                                <label>模式 (Mode)<span class="required-star">*</span></label>
+                                <select id="strategyMode" required>
+                                    <option value="NO">NO</option>
+                                    <option value="ONLY ONE" selected>ONLY ONE</option>
+                                    <option value="PLUS">PLUS</option>
+                                    <option value="STRONG">STRONG</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>時區 (Time Frame)<span class="required-star">*</span></label>
+                        <div class="timeframe-grid-layout">
+                            <select id="timeframe" required>
+                                <option value="NO" selected>NO</option>
+                                <option value="1M">1M</option>
+                                <option value="5M">5M</option>
+                                <option value="15M">15M</option>
+                                <option value="1H">1H</option>
+                                <option value="4H">4H</option>
+                            </select>
+                            <select id="timeframe2">
+                                <option value="NO" selected>NO</option>
+                                <option value="1M">1M</option>
+                                <option value="5M">5M</option>
+                                <option value="15M">15M</option>
+                                <option value="1H">1H</option>
+                                <option value="4H">4H</option>
+                            </select>
+                            <select id="timeframe3">
+                                <option value="NO" selected>NO</option>
+                                <option value="1M">1M</option>
+                                <option value="5M">5M</option>
+                                <option value="15M">15M</option>
+                                <option value="1H">1H</option>
+                                <option value="4H">4H</option>
+                            </select>
+                            <select id="timeframe4">
+                                <option value="NO" selected>NO</option>
+                                <option value="1M">1M</option>
+                                <option value="5M">5M</option>
+                                <option value="15M">15M</option>
+                                <option value="1H">1H</option>
+                                <option value="4H">4H</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>心態狀況 (Mindset)<span class="required-star">*</span></label>
+                        <input type="text" id="mindset" placeholder="例如: 嚴守計劃" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:20px;">
+                        <label>交易截圖 (TradingView 分享連結)<span class="required-star">*</span></label>
+                        <input type="url" id="screenshot" placeholder="必須填寫 TV 分享連結" required>
+                    </div>
+                </div>
+
+                <div>
+                    <button type="submit" class="btn-submit" id="submitBtn">儲存交易記錄</button>
+                </div>
+            </form>
+
+            <div class="delete-zone" id="deleteZone" style="display: none;">
+                <button type="button" class="btn-delete-order" onclick="deleteCurrentSelectedOrder()">🗑️ 刪除此筆交易數據</button>
+            </div>
+        </div>
+        <div class="top-column-center">
+            <div class="card" style="flex: 1; display: flex; flex-direction: column;">
+                <div class="calendar-picker-wrapper">
+                    <h3 id="calendarTitle">📅 Profit & Loss Calendar</h3>
+                    <div class="month-picker-container">
+                        <div class="month-display-bridge" id="monthDisplayLabel">05-2026</div>
+                        <input type="month" id="monthViewSelector" class="month-selector-input" onchange="onMonthSelectorChange()">
+                    </div>
+                </div>
+                
+                <div class="calendar-header">
+                    <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                </div>
+                <div class="calendar-grid" id="calendarGrid" style="flex: 1;"></div>
+                <p class="tip-text">💡 Click days to lock view. Grayed dates support auto cross-month jumping.</p>
+            </div>
+
+            <div class="card screenshot-combined-zone">
+                <div class="mini-chart-title" style="margin-bottom: 8px;">📸 當前選中交易截圖看板</div>
+                <div id="screenshotContent"></div>
+            </div>
+        </div>
+
+        <div class="top-column-right card" style="padding: 0;">
+            <div class="stats-and-pie-card">
+                <div class="stats-left-part">
+                    <div class="stat-section-title">🌍 All Accounts History Stats</div>
+                    <div class="stat-summary-row">
+                        <div class="stat-box" id="box_totalR"><span class="stat-box-title">Total R</span><span class="stat-box-value" id="val_totalR">0.0R</span></div>
+                        <div class="stat-box" id="box_totalMoney"><span class="stat-box-title">Net PnL</span><span class="stat-box-value" id="val_totalMoney">$0</span></div>
+                        <div class="stat-box" id="box_totalWR"><span class="stat-box-title">Win Rate</span><span class="stat-box-value" id="val_totalWR">0%</span></div>
+                    </div>
+                    
+                    <div class="stat-section-title" id="yearStatTitle">🏆 2026 Stats</div>
+                    <div class="stat-summary-row">
+                        <div class="stat-box" id="box_yearR"><span class="stat-box-title">Year R</span><span class="stat-box-value" id="val_yearR">0.0R</span></div>
+                        <div class="stat-box" id="box_yearMoney"><span class="stat-box-title">Year PnL</span><span class="stat-box-value" id="val_yearMoney">$0</span></div>
+                        <div class="stat-box" id="box_yearWR"><span class="stat-box-title">Year WR</span><span class="stat-box-value" id="val_yearWR">0%</span></div>
+                    </div>
+
+                    <div class="stat-section-title" id="monthStatTitle">💵 May Stats</div>
+                    <div class="stat-summary-row">
+                        <div class="stat-box" id="box_monthR"><span class="stat-box-title">Month R</span><span class="stat-box-value" id="val_monthR">0.0R</span></div>
+                        <div class="stat-box" id="box_monthMoney"><span class="stat-box-title">Month PnL</span><span class="stat-box-value" id="val_monthMoney">$0</span></div>
+                        <div class="stat-box" id="box_monthWR"><span class="stat-box-title">Month WR</span><span class="stat-box-value" id="val_monthWR">0%</span></div>
+                    </div>
+                    
+                    <div class="stat-section-title" id="weekStatTitle">📅 Weekly Stats</div>
+                    <div class="stat-summary-row">
+                        <div class="stat-box" id="box_weekR"><span class="stat-box-title">Week R</span><span class="stat-box-value" id="val_weekR">0.0R</span></div>
+                        <div class="stat-box" id="box_weekMoney"><span class="stat-box-title">Week PnL</span><span class="stat-box-value" id="val_weekMoney">$0</span></div>
+                        <div class="stat-box" id="box_weekWR"><span class="stat-box-title">Week WR</span><span class="stat-box-value" id="val_weekWR">0%</span></div>
+                    </div>
+                    
+                    <div class="stat-section-title" id="dayStatTitle">⚡ Daily Stats</div>
+                    <div class="stat-summary-row">
+                        <div class="stat-box" id="box_dayR"><span class="stat-box-title">Daily R</span><span class="stat-box-value" id="val_dayR">0.0R</span></div>
+                        <div class="stat-box" id="box_dayMoney"><span class="stat-box-title">Daily PnL</span><span class="stat-box-value" id="val_dayMoney">$0</span></div>
+                        <div class="stat-box" id="box_dayWR"><span class="stat-box-title">Daily WR</span><span class="stat-box-value" id="val_dayWR">0%</span></div>
+                    </div>
+                </div>
+
+                <div class="pie-right-part">
+                    <div class="chart-container-3d-wrapper">
+                        <div class="chart-container-3d-canvas-box">
+                            <canvas id="zellaRadarChartCanvas"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="zella-score-footer">
+                        <div class="zella-big-numeric">
+                            <span class="zella-mini-lbl">Your Zella Score</span>
+                            <span class="zella-glow-number" id="zellaScoreValueText">0.00</span>
+                        </div>
+                        <div class="zella-progress-container">
+                            <div class="zella-gradient-bar-wrapper">
+                                <div class="zella-node-pointer" id="zellaScorePointer"></div>
+                            </div>
+                            <div class="zella-scale-labels">
+                                <span>0</span><span>20</span><span>40</span><span>60</span><span>80</span><span>100</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="intraday-bar-panel">
+                        <div class="mini-chart-title" id="intradayChartTitle" style="font-size:11px; margin-bottom:6px; color:#4facfe;">⚡ Intraday PnL</div>
+                        <div style="position:relative; width:100%; height:140px;">
+                            <canvas id="intradayBarChartCanvas"></canvas>
+                        </div>
+                        
+                        <div class="file-sync-panel" id="fileSyncPanelLocation">
+                            <div class="file-sync-title">
+                                <span>💾 本地檔案無縫覆蓋系統</span>
+                                <span id="fileStatusBadge" class="file-status-badge file-status-unlinked">未連結</span>
+                            </div>
+                            <button type="button" class="btn-file-link" onclick="initFileHandle()">
+                                🔗 設定並鏈結本地自動覆蓋檔案
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="dashboard-grid-bottom">
+        <div class="card chart-full-width-card">
+            <div class="history-table-header-control">
+                <div class="mini-chart-title" style="margin-bottom: 0; font-size: 13px; color: #00f2fe; letter-spacing: 1px;">📋 交易數據歷史</div>
+                <div class="strategy-winrate-box">
+                    <div>
+                        <select id="strategyFilterSelect" class="strategy-select-mini" onchange="calculateStrategyWinRates()" title="策略種類">
+                            <option value="ALL">ALL Strategy</option>
+                            <option value="OB">OB</option>
+                            <option value="ORB">ORB</option>
+                            <option value="無跟策略">無跟策略</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select id="modeFilterSelect" class="strategy-select-mini" onchange="calculateStrategyWinRates()" title="策略模式">
+                            <option value="ALL">ALL Mode</option>
+                            <option value="NO">NO</option>
+                            <option value="ONLY ONE">ONLY ONE</option>
+                            <option value="PLUS">PLUS</option>
+                            <option value="STRONG">STRONG</option>
+                        </select>
+                    </div>
+                    
+                    <div style="display: flex; gap: 4px; align-items: center;">
+                        <span style="font-size: 11px; color: #64748b; font-weight: 800; text-transform: uppercase;">TFs:</span>
+                        <select id="filterTf1" class="strategy-select-mini" onchange="calculateStrategyWinRates()" title="過濾時區 1">
+                            <option value="ALL">ALL</option>
+                            <option value="NO">NO</option>
+                            <option value="1M">1M</option>
+                            <option value="5M">5M</option>
+                            <option value="15M">15M</option>
+                            <option value="1H">1H</option>
+                            <option value="4H">4H</option>
+                        </select>
+                        <select id="filterTf2" class="strategy-select-mini" onchange="calculateStrategyWinRates()" title="過濾時區 2">
+                            <option value="ALL">ALL</option>
+                            <option value="NO">NO</option>
+                            <option value="1M">1M</option>
+                            <option value="5M">5M</option>
+                            <option value="15M">15M</option>
+                            <option value="1H">1H</option>
+                            <option value="4H">4H</option>
+                        </select>
+                        <select id="filterTf3" class="strategy-select-mini" onchange="calculateStrategyWinRates()" title="過濾時區 3">
+                            <option value="ALL">ALL</option>
+                            <option value="NO">NO</option>
+                            <option value="1M">1M</option>
+                            <option value="5M">5M</option>
+                            <option value="15M">15M</option>
+                            <option value="1H">1H</option>
+                            <option value="4H">4H</option>
+                        </select>
+                        <select id="filterTf4" class="strategy-select-mini" onchange="calculateStrategyWinRates()" title="過濾時區 4">
+                            <option value="ALL">ALL</option>
+                            <option value="NO">NO</option>
+                            <option value="1M">1M</option>
+                            <option value="5M">5M</option>
+                            <option value="15M">15M</option>
+                            <option value="1H">1H</option>
+                            <option value="4H">4H</option>
+                        </select>
+                    </div>
+                    
+                    <div class="winrate-indicator-item" style="border-left: 1px solid #1e293b; padding-left: 10px;">Filtered WR:<span id="wr_filtered" style="color: #00ffa3;">0%</span></div>
+                    <div class="winrate-indicator-item">Count:<span id="filtered_trades_count" style="color: #00f2fe;">0</span></div>
+                    
+                    <div style="display: flex; gap: 8px; margin-left: 10px; border-left: 1px solid #1e293b; padding-left: 10px;">
+                        <div class="winrate-indicator-item">1M:<span id="wr_1m">0%</span></div>
+                        <div class="winrate-indicator-item">5M:<span id="wr_5m">0%</span></div>
+                        <div class="winrate-indicator-item">15M:<span id="wr_15m">0%</span></div>
+                        <div class="winrate-indicator-item">1H:<span id="wr_1h">0%</span></div>
+                        <div class="winrate-indicator-item">4H:<span id="wr_4h">0%</span></div>
+                        <div class="winrate-indicator-item">ALL:<span id="wr_all">0%</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="trade-data-table-wrapper">
+                <table class="trade-data-table">
+                    <thead>
+                        <tr>
+                            <th>Account</th>
+                            <th>Date & Time</th>
+                            <th>Position</th>
+                            <th>Symbol</th>
+                            <th>Outcome</th>
+                            <th>R-Value</th>
+                            <th>PnL Amount</th>
+                            <th>Strategy</th>
+                            <th>Timeframe</th>
+                            <th>Mindset</th>
+                            <th>TV LINK</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tradeDetailTableBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="order-tabs" style="margin-bottom: 0px; background: rgba(0, 0, 0, 0.2);">
+                <button type="button" class="tab-btn active" id="btn_tab_monthly" onclick="switchChartTab('monthly')">📊 Daily PnL Stats</button>
+                <button type="button" class="tab-btn" id="btn_tab_equity" onclick="switchChartTab('equity')">📈 Historical PnL Equity Curve</button>
+            </div>
+            <div class="mini-chart-wrapper">
+                <div class="mini-chart-title" id="mainChartPanelTitle">📊 全帳戶 每日盈虧趨勢統計庫 (DEMO)</div>
+                <div class="mini-bar-container">
+                    <canvas id="mainLineChartCanvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let fileHandleGlobal = null;
+
+        let defaultAccounts = [{ name: "Apex-Main-01", balance: 2000 }];
+        let accounts = JSON.parse(localStorage.getItem('trading_accounts_v2')) || defaultAccounts;
+        let currentAccount = localStorage.getItem('current_trading_account') || accounts[0].name;
+        
+        if (currentAccount === "ALL_ACCOUNTS") {
+            currentAccount = accounts[0].name;
+            localStorage.setItem('current_trading_account', currentAccount);
+        }
+
+        let trades = JSON.parse(localStorage.getItem('trading_data')) || [];
+        
+        trades = trades.map((t, idx) => {
+            if (!t.id) t.id = Date.now() + "_" + idx + "_" + Math.floor(Math.random()*1000);
+            if (!t.account) t.account = accounts[0].name;
+            if (!t.position) t.position = "Long";
+            if (t.theory === 'BOX') t.theory = 'ORB';
+            if (!t.strategyMode) t.strategyMode = "ONLY ONE";
+            t.rValue = Number(t.rValue) || 0;
+            t.pnlAmount = Number(t.pnlAmount) || 0;
+            return t;
+        });
+
+        let mainLineChart = null, zellaRadarChart = null, intradayBarChart = null;
+        let activeChartTabGlobal = 'monthly';
+        let clockTimerToken = null;
+        let isClockPaused = false;
+
+        function verifyPassword() {
+            const input = document.getElementById('passwordInput').value;
+            if (input === '11337799') {
+                document.getElementById('passwordOverlay').style.display = 'none';
+            } else {
+                alert('密碼錯誤，請重新輸入！');
+                document.getElementById('passwordInput').value = '';
+                document.getElementById('passwordInput').focus();
+            }
+        }
+
+        function getTodayDateStr() {
+            const today = new Date();
+            return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        }
+
+        let selectedDateGlobal = getTodayDateStr();
+        const parts = selectedDateGlobal.split('-');
+        let currentYear = parseInt(parts[0]);
+        let currentMonth = parseInt(parts[1]);
+        let activeOrderIndexGlobal = -1;
+
+        const monthNamesEng = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+        function startLiveClock() {
+            if (clockTimerToken) clearInterval(clockTimerToken);
+            function updateClock() {
+                if (isClockPaused || activeOrderIndexGlobal !== -1) return;
+                const now = new Date();
+                const timeStr = now.toTimeString().split(' ')[0];
+                const liveEl = document.getElementById('liveDateTimeStr');
+                if (liveEl && !isClockPaused && activeOrderIndexGlobal === -1) {
+                    liveEl.value = timeStr;
+                }
+            }
+            updateClock();
+            clockTimerToken = setInterval(updateClock, 1000);
+        }
+
+        function pauseLiveClock() {
+            if (activeOrderIndexGlobal === -1) {
+                isClockPaused = true;
+            }
+        }
+
+        function resumeLiveClock() {
+            if (activeOrderIndexGlobal === -1) {
+                const liveEl = document.getElementById('liveDateTimeStr');
+                if (liveEl && liveEl.value.trim() === "") {
+                    isClockPaused = false;
+                }
+            }
+        }
+
+        function formatLiveTimeInput(input) {
+            let val = input.value.replace(/[^\d]/g, '');
+            if (val.length > 6) val = val.substr(0, 6);
+            
+            let formatted = '';
+            if (val.length > 0) {
+                formatted += val.substr(0, 2);
+            }
+            if (val.length > 2) {
+                formatted += ':' + val.substr(2, 2);
+            }
+            if (val.length > 4) {
+                formatted += ':' + val.substr(4, 2);
+            }
+            input.value = formatted;
+        }
+
+        function onTradeDateInputChange() {
+            const dateVal = document.getElementById('tradeDateInput').value;
+            if (dateVal) {
+                selectedDateGlobal = dateVal;
+                const p = dateVal.split('-');
+                currentYear = parseInt(p[0]);
+                currentMonth = parseInt(p[1]);
+                updateMonthDisplayLabelText(currentYear, currentMonth);
+                document.getElementById('monthViewSelector').value = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+                refreshDayState();
+            }
+        }
+
+        window.onload = function() {
+            updateMonthDisplayLabelText(currentYear, currentMonth);
+            document.getElementById('monthViewSelector').value = `${currentYear}-${currentMonth.toString().padStart(2, '0')}`;
+            document.getElementById('tradeDateInput').value = selectedDateGlobal;
+            renderAccountSelectorHTML();
+            refreshDayState();
+            startLiveClock();
+            document.getElementById('passwordInput').focus();
+        }
+
+        function updateMonthDisplayLabelText(y, m) {
+            const mm = String(m).padStart(2, '0');
+            document.getElementById('monthDisplayLabel').innerText = `${mm}-${y}`;
+        }
+
+        function renderAccountSelectorHTML() {
+            const select = document.getElementById('currentAccountSelect');
+            select.innerHTML = "";
+
+            accounts.forEach(acc => {
+                let opt = document.createElement('option');
+                opt.value = acc.name;
+                opt.text = `💼 帳戶：${acc.name} (初始風控 $${acc.balance})`;
+                if (acc.name === currentAccount) opt.selected = true;
+                select.appendChild(opt);
+            });
+            refreshAccountBalanceDisplay();
+            renderSyncCheckboxes();
+        }
+
+        function renderSyncCheckboxes() {
+            const container = document.getElementById('syncCheckboxGrid');
+            container.innerHTML = "";
+            let otherAccounts = accounts.filter(a => a.name !== currentAccount);
+            if (otherAccounts.length === 0) {
+                container.innerHTML = `<span style="color:#64748b; font-size:11.5px;">(無其他可同步之帳戶，請先在上方新增)</span>`;
+                return;
+            }
+            otherAccounts.forEach(acc => {
+                let label = document.createElement('label');
+                label.className = "sync-label";
+                label.innerHTML = `<input type="checkbox" name="syncAccountCheck" value="${acc.name}"> <span>${acc.name}</span>`;
+                container.appendChild(label);
+            });
+        }
+
+        function refreshAccountBalanceDisplay() {
+            const liveEl = document.getElementById('currentLiveBalance');
+            let accObj = accounts.find(a => a.name === currentAccount);
+            if (!accObj) return;
+            document.getElementById('currentInitialBalance').innerText = `$${accObj.balance}`;
+            let accTrades = trades.filter(t => t.account === currentAccount);
+            let sumPnl = accTrades.reduce((sum, t) => sum + (Number(t.pnlAmount) || 0), 0);
+            let live = accObj.balance + sumPnl;
+            liveEl.innerText = `$${live}`;
+            if (live < 0) {
+                liveEl.style.color = "#ff3b30";
+                liveEl.style.textShadow = "0 0 10px rgba(255, 59, 48, 0.6)";
+            } else if (live > accObj.balance) {
+                liveEl.style.color = "#00ffa3";
+                liveEl.style.textShadow = "0 0 10px rgba(0, 255, 163, 0.6)";
+            } else {
+                liveEl.style.color = "#ffffff";
+                liveEl.style.textShadow = "none";
+            }
+        }
+
+        function onAccountSelectorChange() {
+            currentAccount = document.getElementById('currentAccountSelect').value;
+            localStorage.setItem('current_trading_account', currentAccount);
+            activeOrderIndexGlobal = -1;
+            refreshDayState();
+        }
+
+        function addNewAccountPrompt() {
+            let name = prompt("請輸入全新操作帳號名稱 (例如: Apex-Main-02):");
+            if (!name) return;
+            name = name.trim();
+            if (name === "") return;
+            if (accounts.some(a => a.name === name)) {
+                alert("此帳號名稱已存在！");
+                return;
+            }
+            let bal = prompt("請輸入該帳號的初始可用風控額度 ($):", "2000");
+            if (bal === null) return;
+            let balNum = parseInt(bal) || 0;
+            accounts.push({ name: name, balance: balNum });
+            localStorage.setItem('trading_accounts_v2', JSON.stringify(accounts));
+            currentAccount = name;
+            localStorage.setItem('current_trading_account', currentAccount);
+            renderAccountSelectorHTML();
+            refreshDayState();
+        }
+
+        function deleteCurrentAccount() {
+            if (accounts.length <= 1) {
+                alert("系統必須保留至少一個操作帳號！");
+                return;
+            }
+            if (!confirm(`警告：您確定要刪除帳號 [${currentAccount}] 嗎？該帳號下的所有交易歷史數據也將同步被抹除！`)) return;
+            trades = trades.filter(t => t.account !== currentAccount);
+            accounts = accounts.filter(a => a.name !== currentAccount);
+            localStorage.setItem('trading_accounts_v2', JSON.stringify(accounts));
+            localStorage.setItem('trading_data', JSON.stringify(trades));
+            currentAccount = accounts[0].name;
+            localStorage.setItem('current_trading_account', currentAccount);
+            renderAccountSelectorHTML();
+            refreshDayState();
+        }
+
+        function triggerFileInput() {
+            document.getElementById('hiddenFileInput').click();
+        }
+
+        function importTradingData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (Array.isArray(importedData)) {
+                        importedData.forEach((t) => {
+                            if (!t.id) {
+                                t.id = Date.now() + "_imported_" + Math.floor(Math.random()*100000);
+                            }
+                            if (!t.account) t.account = accounts[0].name;
+                            if (!t.position) t.position = "Long";
+                            if (t.theory === 'BOX') t.theory = 'ORB';
+                            if (!t.strategyMode) t.strategyMode = "ONLY ONE";
+                            t.rValue = Number(t.rValue) || 0;
+                            t.pnlAmount = Number(t.pnlAmount) || 0;
+
+                            let exists = trades.some(existingTrade => existingTrade.id === t.id);
+                            if (!exists) {
+                                trades.push(t);
+                            }
+                        });
+
+                        localStorage.setItem('trading_data', JSON.stringify(trades));
+                        refreshDayState();
+                        triggerBackgroundFileSync();
+                    } else {
+                        alert("❌ 格式不符：匯入的檔案內容必須是 JSON 陣列結構。");
+                    }
+                } catch(err) {
+                    alert("❌ 讀取失敗：該 JSON 檔案毀損或解析異常。");
+                    console.error(err);
+                }
+                event.target.value = "";
+            };
+            reader.readAsText(file);
+        }
+
+        function onMonthSelectorChange() {
+            const val = document.getElementById('monthViewSelector').value;
+            if (!val) return;
+            const p = val.split('-');
+            currentYear = parseInt(p[0]);
+            currentMonth = parseInt(p[1]);
+            updateMonthDisplayLabelText(currentYear, currentMonth);
+            refreshDayState();
+        }
+
+        function autoAdjustSign() {
+            const outcome = document.getElementById('outcome').value;
+            const pnlInput = document.getElementById('pnlAmount');
+            const rInput = document.getElementById('rValue');
+            
+            let valPnl = pnlInput.value;
+            if (valPnl !== "") {
+                let numPnl = Math.abs(parseFloat(valPnl));
+                if (!isNaN(numPnl)) {
+                    if (outcome === 'LOSS') {
+                        pnlInput.value = numPnl > 0 ? -numPnl : 0;
+                    } else if (outcome === 'WIN') {
+                        pnlInput.value = numPnl;
+                    }
+                }
+            }
+
+            let valR = rInput.value;
+            if (valR !== "") {
+                let numR = Math.abs(parseFloat(valR));
+                if (!isNaN(numR)) {
+                    if (outcome === 'LOSS') {
+                        rInput.value = numR > 0 ? -numR : 0;
+                    } else if (outcome === 'BE') {
+                        rInput.value = 0;
+                    } else {
+                        rInput.value = numR;
+                    }
+                }
+            }
+        }
+
+        function getDaysInMonth(y, m) { return new Date(y, m, 0).getDate(); }
+        function getFirstDayOfWeek(y, m) { return new Date(y, m - 1, 1).getDay(); }
+
+        function refreshDayState() {
+            refreshAccountBalanceDisplay();
+            renderCalendarGrid();
+            calculateAndRenderStatistics();
+            renderOrderTabsFormZone();
+            renderTradeDetailTable(); 
+            calculateStrategyWinRates();
+        }
+
+        function previewImageInDashboard(url) {
+            if (url && url.startsWith('http')) {
+                document.getElementById('screenshotContent').innerHTML = `
+                    <img src="${url}" class="screenshot-preview" onerror="this.onerror=null; this.parentNode.innerHTML='<span style=\'color:#ff3b30; font-size:12px; padding:10px; text-align:center;\'>⚠️ 圖片無法直連載入。<br>請確認是否為 TradingView 分享連結</span>';" onclick="window.open('${url}','_blank')">`;
+            } else {
+                document.getElementById('screenshotContent').innerHTML = `<span style="color:#64748b; font-size:13px;">無截圖數據</span>`;
+            }
+        }
+
+        function selectTradeFromHistoryTable(tradeId, tradeDate, tradeAccount) {
+            if (!accounts.some(a => a.name === tradeAccount)) {
+                accounts.push({ name: tradeAccount, balance: 2000 });
+                localStorage.setItem('trading_accounts_v2', JSON.stringify(accounts));
+                renderAccountSelectorHTML();
+            }
+            
+            currentAccount = tradeAccount;
+            localStorage.setItem('current_trading_account', currentAccount);
+            document.getElementById('currentAccountSelect').value = currentAccount;
+
+            selectedDateGlobal = tradeDate;
+            document.getElementById('tradeDateInput').value = selectedDateGlobal;
+            const p = tradeDate.split('-');
+            currentYear = parseInt(p[0]);
+            currentMonth = parseInt(p[1]);
+            updateMonthDisplayLabelText(currentYear, currentMonth);
+            document.getElementById('monthViewSelector').value = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+
+            let dayAllTrades = trades.filter(t => t.date === selectedDateGlobal);
+            let idx = dayAllTrades.findIndex(t => t.id === tradeId);
+            activeOrderIndexGlobal = idx !== -1 ? idx : -1;
+
+            refreshDayState();
+            
+            document.getElementById('formTitle').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function renderTradeDetailTable() {
+            const tbody = document.getElementById('tradeDetailTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = "";
+            
+            let filteredTrades = [...trades];
+            filteredTrades.sort((a, b) => b.date.localeCompare(a.date) || (b.time || "").localeCompare(a.time || ""));
+
+            if (filteredTrades.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; color:#475569; padding: 20px;">No trade data recorded in history.</td></tr>`;
+                return;
+            }
+
+            filteredTrades.forEach((t) => {
+                let tr = document.createElement('tr');
+                
+                let formattedDateTime = "Intraday";
+                if (t.date) {
+                    const dParts = t.date.split('-');
+                    if (dParts.length === 3) {
+                        formattedDateTime = `${dParts[2]}-${dParts[1]}-${dParts[0]} ${t.time || "00:00"}`;
+                    }
+                }
+
+                let outcomeColor = t.outcome === 'WIN' ? '#00ffa3' : (t.outcome === 'LOSS' ? '#ff3b30' : '#00f2fe');
+                let highlightStyle = (t.account === currentAccount) ? 'background:rgba(0, 242, 254, 0.06); color:#00f2fe; font-weight:800;' : '';
+
+                let tvLinkHtml = `<span style="color:#475569;">No Link</span>`;
+                if (t.screenshot && t.screenshot.startsWith('http')) {
+                    tvLinkHtml = `<a onclick="previewImageInDashboard('${t.screenshot}')" class="tv-link-anchor">🔗 View Link</a>`;
+                }
+
+                let displayTf = t.timeframe || 'NO';
+                if (t.timeframe2 && t.timeframe2 !== 'NO') displayTf += `, ${t.timeframe2}`;
+                if (t.timeframe3 && t.timeframe3 !== 'NO') displayTf += `, ${t.timeframe3}`;
+                if (t.timeframe4 && t.timeframe4 !== 'NO') displayTf += `, ${t.timeframe4}`;
+
+                let displayTheory = t.theory || 'OB';
+                if (t.strategyMode) displayTheory += ` (${t.strategyMode})`;
+
+                tr.innerHTML = `
+                    <td class="account-clickable-cell" style="${highlightStyle} max-width:100px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${t.account}" onclick="selectTradeFromHistoryTable('${t.id}', '${t.date}', '${t.account}')">${t.account}</td>
+                    <td style="font-family:monospace;">${formattedDateTime}</td>
+                    <td><span style="color:${t.position === 'Short' ? '#ff9f43' : '#38bdf8'}; font-weight:800;">${t.position || 'Long'}</span></td>
+                    <td><span style="background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px; font-family:monospace;">${t.symbol || 'NQ'}</span></td>
+                    <td><span style="color:${outcomeColor}; font-weight:800;">● ${t.outcome}</span></td>
+                    <td style="font-family:monospace; color:#00f2fe;">${Number(t.rValue).toFixed(1)}R</td>
+                    <td style="font-family:monospace; color:${t.pnlAmount >= 0 ? '#00ffa3' : '#ff3b30'}">${t.pnlAmount >= 0 ? '$' + t.pnlAmount : '-$' + Math.abs(t.pnlAmount)}</td>
+                    <td><span style="color:#fb923c;">${displayTheory}</span></td>
+                    <td><span style="color:#a855f7; font-weight:700;">${displayTf}</span></td>
+                    <td style="max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${t.mindset || ''}">${t.mindset || '-'}</td>
+                    <td>${tvLinkHtml}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function calculateStrategyWinRates() {
+            const selectedStrat = document.getElementById('strategyFilterSelect').value;
+            const selectedMode = document.getElementById('modeFilterSelect').value;
+            
+            const tf1 = document.getElementById('filterTf1').value;
+            const tf2 = document.getElementById('filterTf2').value;
+            const tf3 = document.getElementById('filterTf3').value;
+            const tf4 = document.getElementById('filterTf4').value;
+            
+            let filteredTrades = [...trades];
+            
+            // 1. 過濾策略種類
+            if (selectedStrat !== 'ALL') {
+                filteredTrades = filteredTrades.filter(t => (t.theory || '').toUpperCase() === selectedStrat.toUpperCase());
+            }
+            
+            // 2. 過濾策略模式
+            if (selectedMode !== 'ALL') {
+                filteredTrades = filteredTrades.filter(t => (t.strategyMode || '').toUpperCase() === selectedMode.toUpperCase());
+            }
+            
+            // 3. 過濾多個時區 (需交集，亦即一筆單同時包含所有已設定的非 ALL 時區)
+            const activeTfs = [tf1, tf2, tf3, tf4].filter(tf => tf !== 'ALL');
+            if (activeTfs.length > 0) {
+                filteredTrades = filteredTrades.filter(t => {
+                    const tradeTfs = [t.timeframe, t.timeframe2, t.timeframe3, t.timeframe4]
+                        .filter(x => x && x !== 'NO')
+                        .map(x => x.toUpperCase());
+                    
+                    return activeTfs.every(activeTf => {
+                        if (activeTf === 'NO') {
+                            return [t.timeframe, t.timeframe2, t.timeframe3, t.timeframe4]
+                                .some(x => !x || x.toUpperCase() === 'NO');
+                        }
+                        return tradeTfs.includes(activeTf.toUpperCase());
+                    });
+                });
+            }
+            
+            // 計算篩選結果勝率
+            let wins = filteredTrades.filter(t => t.outcome === 'WIN').length;
+            let total = filteredTrades.length;
+            let wr = total > 0 ? ((wins / total) * 100).toFixed(0) + '%' : '0%';
+            
+            document.getElementById('wr_filtered').innerText = wr;
+            document.getElementById('filtered_trades_count').innerText = total;
+
+            // 另外動態計算 5 個主要時區在當前 (策略+模式) 下的獨立胜率，方便對比
+            const timeframes = ['1M', '5M', '15M', '1H', '4H'];
+            timeframes.forEach(tf => {
+                let tfTrades = [...trades];
+                if (selectedStrat !== 'ALL') {
+                    tfTrades = tfTrades.filter(t => (t.theory || '').toUpperCase() === selectedStrat.toUpperCase());
+                }
+                if (selectedMode !== 'ALL') {
+                    tfTrades = tfTrades.filter(t => (t.strategyMode || '').toUpperCase() === selectedMode.toUpperCase());
+                }
+                tfTrades = tfTrades.filter(t => 
+                    (t.timeframe || '').toUpperCase() === tf ||
+                    (t.timeframe2 || '').toUpperCase() === tf ||
+                    (t.timeframe3 || '').toUpperCase() === tf ||
+                    (t.timeframe4 || '').toUpperCase() === tf
+                );
+                let tfWins = tfTrades.filter(t => t.outcome === 'WIN').length;
+                let tfTotal = tfTrades.length;
+                let tfWr = tfTotal > 0 ? ((tfWins / tfTotal) * 100).toFixed(0) + '%' : '0%';
+                document.getElementById(`wr_${tf.toLowerCase()}`).innerText = tfWr;
+            });
+
+            // 計算當前 (策略+模式) 整體勝率
+            let allBaseTrades = [...trades];
+            if (selectedStrat !== 'ALL') {
+                allBaseTrades = allBaseTrades.filter(t => (t.theory || '').toUpperCase() === selectedStrat.toUpperCase());
+            }
+            if (selectedMode !== 'ALL') {
+                allBaseTrades = allBaseTrades.filter(t => (t.strategyMode || '').toUpperCase() === selectedMode.toUpperCase());
+            }
+            let allWins = allBaseTrades.filter(t => t.outcome === 'WIN').length;
+            let allTotal = allBaseTrades.length;
+            let allWr = allTotal > 0 ? ((allWins / allTotal) * 100).toFixed(0) + '%' : '0%';
+            document.getElementById('wr_all').innerText = allWr;
+        }
+
+        function applyNeonStyleToBox(boxId, value) {
+            const box = document.getElementById(boxId);
+            if (!box) return;
+            box.className = "stat-box";
+            if (value > 0) {
+                box.classList.add("neon-glow-win");
+            } else if (value < 0) {
+                box.classList.add("neon-glow-loss");
+            } else {
+                box.classList.add("neon-glow-zero");
+            }
+        }
+
+        function calculateZellaScore() {
+            let srcTrades = [...trades];
+            
+            srcTrades.sort((a, b) => a.date.localeCompare(b.date) || (a.time || "").localeCompare(a.time || ""));
+
+            let totalTrades = srcTrades.length;
+            if (totalTrades === 0) {
+                updateZellaRadarUI([0, 0, 0, 0, 0, 0], 0);
+                return;
+            }
+
+            let wins = srcTrades.filter(t => t.outcome === 'WIN').length;
+            let winRateScore = (wins / totalTrades) * 100;
+
+            let totalGrossWin = 0;
+            let totalGrossLoss = 0;
+            let winPnlArray = [];
+            let lossPnlArray = [];
+            
+            let totalInitialBalance = accounts.reduce((sum, a) => sum + (Number(a.balance) || 0), 0);
+            let currentEquity = totalInitialBalance;
+            let maxEquity = totalInitialBalance;
+            let maxDdPercent = 0;
+            let pnlSequence = [];
+
+            srcTrades.forEach(t => {
+                let pnl = Number(t.pnlAmount) || 0;
+                pnlSequence.push(pnl);
+                currentEquity += pnl;
+                
+                if (pnl > 0) {
+                    totalGrossWin += pnl;
+                    winPnlArray.push(pnl);
+                } else if (pnl < 0) {
+                    totalGrossLoss += Math.abs(pnl);
+                    lossPnlArray.push(Math.abs(pnl));
+                }
+
+                if (currentEquity > maxEquity) maxEquity = currentEquity;
+                
+                if (maxEquity > 0) {
+                    let currentDdPercent = ((maxEquity - currentEquity) / maxEquity) * 100;
+                    if (currentDdPercent > maxDdPercent) maxDdPercent = currentDdPercent;
+                }
+            });
+
+            let pf = totalGrossLoss === 0 ? (totalGrossWin > 0 ? 2.0 : 1.0) : totalGrossWin / totalGrossLoss;
+            let pfScore = pf >= 2.0 ? 100 : (pf / 2.0) * 100;
+
+            let avgWin = winPnlArray.length > 0 ? (totalGrossWin / winPnlArray.length) : 0;
+            let avgLoss = lossPnlArray.length > 0 ? (totalGrossLoss / lossPnlArray.length) : 0;
+            let pr = avgLoss === 0 ? (avgWin > 0 ? 3.0 : 1.0) : avgWin / avgLoss;
+            let avgWinLossScore = pr >= 3.0 ? 100 : (pr / 3.0) * 100;
+
+            let netProfit = currentEquity - totalInitialBalance;
+            let maxDdMoney = maxEquity * (maxDdPercent / 100);
+            let rf = maxDdMoney === 0 ? (netProfit > 0 ? 4.0 : 0) : netProfit / maxDdMoney;
+            let recoveryFactorScore = rf >= 4.0 ? 100 : (rf <= 0 ? 0 : (rf / 4.0) * 100);
+
+            let maxDrawdownScore = Math.max(0, 100 - (maxDdPercent * 3.33));
+
+            let consistencyScore = 50; 
+            if (totalTrades >= 2) {
+                let mean = pnlSequence.reduce((s, v) => s + v, 0) / totalTrades;
+                let variance = pnlSequence.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / totalTrades;
+                let stdDev = Math.sqrt(variance);
+                if (stdDev === 0) consistencyScore = 100;
+                else {
+                    let cv = stdDev / (Math.abs(mean) || 1);
+                    consistencyScore = Math.max(10, Math.min(100, 100 - (cv * 15)));
+                }
+            }
+
+            let finalRadarData = [
+                Math.round(winRateScore),
+                Math.round(pfScore),
+                Math.round(avgWinLossScore),
+                Math.round(recoveryFactorScore),
+                Math.round(maxDrawdownScore),
+                Math.round(consistencyScore)
+            ];
+
+            let totalSum = finalRadarData.reduce((s, v) => s + v, 0);
+            let overallZellaScore = Number((totalSum / 6).toFixed(2));
+
+            updateZellaRadarUI(finalRadarData, overallZellaScore);
+        }
+
+        function updateZellaRadarUI(radarData, finalScore) {
+            document.getElementById('zellaScoreValueText').innerText = finalScore.toFixed(2);
+            document.getElementById('zellaScorePointer').style.left = `${finalScore}%`;
+
+            const pointer = document.getElementById('zellaScorePointer');
+            pointer.className = "zella-node-pointer";
+            if (finalScore >= 60) {
+                pointer.classList.add("zella-node-pointer-win");
+            } else if (finalScore > 0 && finalScore < 40) {
+                pointer.classList.add("zella-node-pointer-loss");
+            }
+
+            if (!zellaRadarChart) {
+                renderZellaRadarChart(radarData);
+            } else {
+                zellaRadarChart.data.datasets[0].data = radarData;
+                zellaRadarChart.update();
+            }
+        }
+
+        function renderZellaRadarChart(radarData) {
+            const ctx = document.getElementById('zellaRadarChartCanvas').getContext('2d');
+            
+            zellaRadarChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Win %', 'Profit Factor', 'Avg Win/Loss', 'Recovery Factor', 'Max Drawdown', 'Consistency'],
+                    datasets: [{
+                        label: 'Zella Performance Metrics (All)',
+                        data: radarData,
+                        backgroundColor: 'rgba(37, 99, 235, 0.18)',
+                        borderColor: '#2563eb',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#00f2fe',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 1.5,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    legend: { display: false },
+                    tooltips: {
+                        enabled: true,
+                        backgroundColor: 'rgba(13, 17, 29, 0.95)',
+                        titleFontColor: '#00f2fe',
+                        bodyFontColor: '#cbd5e1',
+                        borderColor: '#1e293b',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(tooltipItem, data) {
+                                return data.labels[tooltipItem.index] + ': ' + tooltipItem.yLabel + '分';
+                            }
+                        }
+                    },
+                    plugins: {
+                        datalabels: { display: false }
+                    },
+                    scale: {
+                        ticks: {
+                            beginAtZero: true,
+                            max: 100,
+                            min: 0,
+                            stepSize: 20,
+                            display: false
+                        },
+                        gridLines: {
+                            color: 'rgba(0, 242, 254, 0.08)',
+                            lineWidth: 1,
+                            circular: false
+                        },
+                        angleLines: {
+                            color: 'rgba(255, 255, 255, 0.06)'
+                        },
+                        pointLabels: {
+                            fontColor: '#94a3b8',
+                            fontSize: 10,
+                            fontWeight: '700',
+                            fontFamily: 'SF Pro Display, sans-serif'
+                        }
+                    }
+                }
+            });
+        }
+
+        function calculateAndRenderStatistics() {
+            let tR = 0, tM = 0, tWins = 0, tTotal = 0;
+            let yR = 0, yM = 0, yWins = 0, yTotal = 0;
+            let mR = 0, mM = 0, mWins = 0, mTotal = 0;
+            let wR = 0, wM = 0, wWins = 0, wTotal = 0;
+            let dR = 0, dM = 0, dWins = 0, dTotal = 0;
+
+            const now = new Date();
+            
+            let partsSel = selectedDateGlobal.split('-');
+            let sYear = parseInt(partsSel[0]);
+            let sMonth = parseInt(partsSel[1]);
+            let sDay = parseInt(partsSel[2]);
+            let targetDate = new Date(sYear, sMonth - 1, sDay);
+            
+            let currentDayOfWeek = targetDate.getDay(); 
+            let sunDate = new Date(targetDate);
+            sunDate.setDate(targetDate.getDate() - currentDayOfWeek);
+            sunDate.setHours(0, 0, 0, 0);
+
+            let satDate = new Date(sunDate);
+            satDate.setDate(sunDate.getDate() + 6);
+            satDate.setHours(23, 59, 59, 999);
+
+            let formatPad = (num) => String(num).padStart(2, '0');
+            let sunStr = `${formatPad(sunDate.getDate())}-${formatPad(sunDate.getMonth() + 1)}-${sunDate.getFullYear()}`;
+            let satStr = `${formatPad(satDate.getDate())}-${formatPad(satDate.getMonth() + 1)}-${satDate.getFullYear()}`;
+            let dayDisplayFormatted = `${formatPad(sDay)}-${formatPad(sMonth)}-${sYear}`;
+
+            trades.forEach(t => {
+                let r = Number(t.rValue) || 0;
+                let p = Number(t.pnlAmount) || 0;
+                let isWin = t.outcome === 'WIN';
+                
+                tR += r; tM += p; tTotal++;
+                if (isWin) tWins++;
+
+                if (t.date && typeof t.date === 'string') {
+                    if (t.date.startsWith(String(now.getFullYear()))) {
+                        yR += r; yM += p; yTotal++;
+                        if (isWin) yWins++;
+                    }
+                    let prefixMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+                    if (t.date.startsWith(prefixMonth)) {
+                        mR += r; mM += p; mTotal++;
+                        if (isWin) mWins++;
+                    }
+                    if (t.date === selectedDateGlobal) {
+                        dR += r; dM += p; dTotal++;
+                        if (isWin) dWins++;
+                    }
+                    try {
+                        let tDate = new Date(t.date);
+                        tDate.setHours(12,0,0,0);
+                        if (tDate >= sunDate && tDate <= satDate) {
+                            wR += r; wM += p; wTotal++;
+                            if (isWin) wWins++;
+                        }
+                    } catch(e){}
+                }
+            });
+
+            let tWR = tTotal > 0 ? Math.round((tWins / tTotal) * 100) : 0;
+            let yWR = yTotal > 0 ? Math.round((yWins / yTotal) * 100) : 0;
+            let mWR = mTotal > 0 ? Math.round((mWins / mTotal) * 100) : 0;
+            let wWR = wTotal > 0 ? Math.round((wWins / wTotal) * 100) : 0;
+            let dWR = dTotal > 0 ? Math.round((dWins / dTotal) * 100) : 0;
+
+            document.getElementById('val_totalR').innerText = `${tR.toFixed(1)}R`;
+            document.getElementById('val_totalMoney').innerText = tM >= 0 ? `$${tM}` : `-$${Math.abs(tM)}`;
+            document.getElementById('val_totalWR').innerText = `${tWR}%`;
+            applyNeonStyleToBox('box_totalR', tR);
+            applyNeonStyleToBox('box_totalMoney', tM);
+            applyNeonStyleToBox('box_totalWR', tM);
+
+            document.getElementById('yearStatTitle').innerText = `🏆 ${now.getFullYear()} Stats`;
+            let curMonthEngStr = monthNamesEng[now.getMonth()] || "May";
+            document.getElementById('monthStatTitle').innerText = `💵 ${curMonthEngStr} Stats`;
+            
+            document.getElementById('val_yearR').innerText = `${yR.toFixed(1)}R`;
+            document.getElementById('val_yearMoney').innerText = yM >= 0 ? `$${yM}` : `-$${Math.abs(yM)}`;
+            document.getElementById('val_yearWR').innerText = `${yWR}%`;
+            applyNeonStyleToBox('box_yearR', yR);
+            applyNeonStyleToBox('box_yearMoney', yM);
+            applyNeonStyleToBox('box_yearWR', yM);
+
+            document.getElementById('val_monthR').innerText = `${mR.toFixed(1)}R`;
+            document.getElementById('val_monthMoney').innerText = mM >= 0 ? `$${mM}` : `-$${Math.abs(mM)}`;
+            document.getElementById('val_monthWR').innerText = `${mWR}%`;
+            applyNeonStyleToBox('box_monthR', mR);
+            applyNeonStyleToBox('box_monthMoney', mM);
+            applyNeonStyleToBox('box_monthWR', mM);
+
+            document.getElementById('weekStatTitle').innerText = `📅 Weekly Stats (${sunStr} ~ ${satStr})`;
+            document.getElementById('val_weekR').innerText = `${wR.toFixed(1)}R`;
+            document.getElementById('val_weekMoney').innerText = wM >= 0 ? `$${wM}` : `-$${Math.abs(wM)}`;
+            document.getElementById('val_weekWR').innerText = `${wWR}%`;
+            applyNeonStyleToBox('box_weekR', wR);
+            applyNeonStyleToBox('box_weekMoney', wM);
+            applyNeonStyleToBox('box_weekWR', wM);
+
+            document.getElementById('dayStatTitle').innerText = `⚡ Daily Stats (${dayDisplayFormatted})`;
+            document.getElementById('val_dayR').innerText = `${dR.toFixed(1)}R`;
+            document.getElementById('val_dayMoney').innerText = dM >= 0 ? `$${dM}` : `-$${Math.abs(dM)}`;
+            document.getElementById('val_dayWR').innerText = `${dWR}%`;
+            applyNeonStyleToBox('box_dayR', dR);
+            applyNeonStyleToBox('box_dayMoney', dM);
+            applyNeonStyleToBox('box_dayWR', dM);
+
+            calculateZellaScore();
+            renderIntradayBarChart(); 
+            renderMainLineChartCombined();
+        }
+
+        function renderCalendarGrid() {
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = "";
+            let daysInMonth = getDaysInMonth(currentYear, currentMonth);
+            let firstDay = getFirstDayOfWeek(currentYear, currentMonth);
+
+            let prevMonthYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+            let prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+            let daysInPrevMonth = getDaysInMonth(prevMonthYear, prevMonth);
+
+            let nextMonthYear = currentMonth === 12 ? currentYear + 1 : currentYear;
+            let nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
+
+            for (let i = firstDay - 1; i >= 0; i--) {
+                let pDay = daysInPrevMonth - i;
+                let box = document.createElement('div');
+                box.className = "day-box other-month-day";
+                box.innerHTML = `<div class="day-num">${pDay}</div><div style="font-size:9px; color:#334155; text-align:center; font-weight:700; text-transform:uppercase;">Last Month</div>`;
+                
+                box.onclick = function() {
+                    currentYear = prevMonthYear;
+                    currentMonth = prevMonth;
+                    selectedDateGlobal = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(pDay).padStart(2, '0')}`;
+                    document.getElementById('monthViewSelector').value = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+                    document.getElementById('tradeDateInput').value = selectedDateGlobal;
+                    updateMonthDisplayLabelText(currentYear, currentMonth);
+                    activeOrderIndexGlobal = -1;
+                    refreshDayState();
+                };
+                grid.appendChild(box);
+            }
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                let dateStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                let box = document.createElement('div');
+                box.className = "day-box";
+                if (dateStr === selectedDateGlobal) box.classList.add("selected-box");
+
+                box.onclick = function() {
+                    selectedDateGlobal = dateStr;
+                    document.getElementById('tradeDateInput').value = dateStr;
+                    activeOrderIndexGlobal = -1;
+                    refreshDayState();
+                };
+
+                let dayTrades = trades.filter(t => t.date === dateStr);
+                
+                let html = `<div class="day-num" style="color:#cbd5e1;">${d}</div>`;
+
+                if (dayTrades.length > 0) {
+                    let sumPnl = 0;
+                    let sumR = 0;
+                    let dayWin = 0, dayLoss = 0, dayBe = 0;
+
+                    dayTrades.forEach(t => {
+                        sumPnl += Number(t.pnlAmount) || 0;
+                        sumR += Number(t.rValue) || 0;
+                        if (t.outcome === 'WIN') dayWin++;
+                        else if (t.outcome === 'LOSS') dayLoss++;
+                        else if (t.outcome === 'BE') dayBe++;
+                    });
+
+                    let totalCount = dayWin + dayLoss + dayBe;
+                    let wr = totalCount > 0 ? ((dayWin / totalCount) * 100).toFixed(0) : 0;
+
+                    if (sumPnl > 0) box.classList.add("win-day");
+                    else if (sumPnl < 0) box.classList.add("loss-day");
+                    else box.classList.add("be-day");
+
+                    html += `<div class="day-wr">WR: ${wr}%</div>`;
+                    html += `<div class="day-r-val ${sumPnl >= 0 ? 'day-r-win' : 'day-r-loss'}">${sumR.toFixed(1)} R</div>`;
+                    html += `<div class="day-pnl ${sumPnl >= 0 ? 'day-r-win' : 'day-r-loss'}">${sumPnl >= 0 ? '$'+sumPnl : '-$'+Math.abs(sumPnl)}</div>`;
+                    html += `<div class="day-count-label">${totalCount} ${totalCount > 1 ? 'Trades' : 'Trade'}</div>`;
+                } else {
+                    html += `<div class="day-status">No Trade</div>`;
+                }
+
+                box.innerHTML = html;
+                grid.appendChild(box);
+            }
+
+            let totalCells = firstDay + daysInMonth;
+            let nextDaysNeeded = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+            for (let n = 1; n <= nextDaysNeeded; n++) {
+                let box = document.createElement('div');
+                box.className = "day-box other-month-day";
+                box.innerHTML = `<div class="day-num">${n}</div><div style="font-size:9px; color:#334155; text-align:center; font-weight:700; text-transform:uppercase;">Next Month</div>`;
+                
+                box.onclick = function() {
+                    currentYear = nextMonthYear;
+                    currentMonth = nextMonth;
+                    selectedDateGlobal = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(n).padStart(2, '0')}`;
+                    document.getElementById('monthViewSelector').value = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+                    document.getElementById('tradeDateInput').value = selectedDateGlobal;
+                    updateMonthDisplayLabelText(currentYear, currentMonth);
+                    activeOrderIndexGlobal = -1;
+                    refreshDayState();
+                };
+                grid.appendChild(box);
+            }
+        }
+
+        function renderOrderTabsFormZone() {
+            const zone = document.getElementById('orderTabsZone');
+            if (!zone) return;
+            zone.innerHTML = "";
+            let dayAllTrades = trades.filter(t => t.date === selectedDateGlobal);
+
+            let appendBtn = document.createElement('button');
+            appendBtn.className = "tab-btn append-tab";
+            appendBtn.type = "button";
+            appendBtn.innerText = "➕ New Trade";
+            
+            if (activeOrderIndexGlobal === -1) {
+                appendBtn.classList.add("active");
+            }
+
+            appendBtn.onclick = function() {
+                activeOrderIndexGlobal = -1;
+                renderOrderTabsFormZone();
+            };
+            zone.appendChild(appendBtn);
+
+            dayAllTrades.forEach((trade, index) => {
+                let btn = document.createElement('button');
+                btn.className = "tab-btn";
+                
+                if (trade.outcome === 'WIN') {
+                    btn.classList.add("default-win-pnl");
+                } else if (trade.outcome === 'LOSS') {
+                    btn.classList.add("default-loss-pnl");
+                } else if (trade.outcome === 'BE') {
+                    btn.classList.add("default-be-pnl");
+                }
+
+                if (index === activeOrderIndexGlobal) {
+                    btn.classList.add("active");
+                    if (trade.outcome === 'WIN') {
+                        btn.classList.add("active-win-pnl");
+                    } else if (trade.outcome === 'LOSS') {
+                        btn.classList.add("active-loss-pnl");
+                    } else if (trade.outcome === 'BE') {
+                        btn.classList.add("active-be-pnl");
+                    }
+                }
+                btn.type = "button";
+                let icon = trade.outcome === 'WIN' ? '🟢' : (trade.outcome === 'LOSS' ? '🔴' : '🟡');
+                
+                btn.innerText = `${icon} [${trade.account}] Trade ${index + 1}`;
+                btn.onclick = function() {
+                    activeOrderIndexGlobal = index;
+                    renderOrderTabsFormZone();
+                };
+                zone.appendChild(btn);
+            });
+
+            const formTitle = document.getElementById('formTitle');
+            const submitBtn = document.getElementById('submitBtn');
+            const deleteZone = document.getElementById('deleteZone');
+
+            if (activeOrderIndexGlobal === -1) {
+                formTitle.innerText = "New Trade";
+                submitBtn.innerText = "儲存交易記錄";
+                submitBtn.className = "btn-submit";
+                deleteZone.style.display = "none";
+
+                document.getElementById('symbol').value = "NQ";
+                document.getElementById('outcome').value = "WIN";
+                document.getElementById('position').value = "Long";
+                document.getElementById('rValue').value = "";
+                document.getElementById('pnlAmount').value = "";
+                document.getElementById('theory').value = "OB";
+                document.getElementById('strategyMode').value = "ONLY ONE";
+                document.getElementById('timeframe').value = "NO";
+                document.getElementById('timeframe2').value = "NO";
+                document.getElementById('timeframe3').value = "NO";
+                document.getElementById('timeframe4').value = "NO";
+                document.getElementById('mindset').value = "";
+                document.getElementById('screenshot').value = "";
+                document.getElementById('screenshotContent').innerHTML = `<span style="color:#475569; font-size:13px;">🆕 請在左側輸入截圖網址並存檔</span>`;
+                document.getElementById('syncAccountsZone').style.display = "block";
+                
+                isClockPaused = false;
+                startLiveClock();
+            } else {
+                let targetTrade = dayAllTrades[activeOrderIndexGlobal];
+                formTitle.innerText = `Trade ${activeOrderIndexGlobal + 1} (${targetTrade.account})`;
+                submitBtn.innerText = "確認修改並覆蓋";
+                submitBtn.className = "btn-submit btn-edit-mode";
+                deleteZone.style.display = "block";
+                document.getElementById('syncAccountsZone').style.display = "none";
+
+                document.getElementById('symbol').value = targetTrade.symbol || "NQ";
+                document.getElementById('outcome').value = targetTrade.outcome || "WIN";
+                document.getElementById('position').value = targetTrade.position || "Long";
+                document.getElementById('rValue').value = targetTrade.rValue !== undefined ? targetTrade.rValue : "";
+                document.getElementById('pnlAmount').value = targetTrade.pnlAmount || "";
+                document.getElementById('theory').value = targetTrade.theory || "OB";
+                document.getElementById('strategyMode').value = targetTrade.strategyMode || "ONLY ONE";
+                document.getElementById('timeframe').value = targetTrade.timeframe || "NO";
+                document.getElementById('timeframe2').value = targetTrade.timeframe2 || "NO";
+                document.getElementById('timeframe3').value = targetTrade.timeframe3 || "NO";
+                document.getElementById('timeframe4').value = targetTrade.timeframe4 || "NO";
+                document.getElementById('mindset').value = targetTrade.mindset || "";
+                document.getElementById('screenshot').value = targetTrade.screenshot || "";
+
+                document.getElementById('liveDateTimeStr').value = targetTrade.time || "00:00:00";
+
+                if (targetTrade.screenshot && targetTrade.screenshot.startsWith('http')) {
+                    document.getElementById('screenshotContent').innerHTML = `
+                        <img src="${targetTrade.screenshot}" class="screenshot-preview" onerror="this.onerror=null; this.parentNode.innerHTML='<span style=\'color:#ff3b30; font-size:12px; padding:10px; text-align:center;\'>⚠️ 圖片無法直連載入。<br>請確認是否為 TradingView 分享連結</span>';" onclick="window.open('${targetTrade.screenshot}','_blank')">`;
+                } else {
+                    document.getElementById('screenshotContent').innerHTML = `<span style="color:#64748b; font-size:13px;">無截圖數據</span>`;
+                }
+            }
+        }
+
+        function handleFormSubmit(event) {
+            event.preventDefault();
+
+            const symbol = document.getElementById('symbol').value;
+            const outcome = document.getElementById('outcome').value;
+            const position = document.getElementById('position').value;
+            const rValue = document.getElementById('rValue').value;
+            const pnlAmount = document.getElementById('pnlAmount').value;
+            const theory = document.getElementById('theory').value;
+            const strategyMode = document.getElementById('strategyMode').value;
+            const timeframe = document.getElementById('timeframe').value;
+            const timeframe2 = document.getElementById('timeframe2').value;
+            const timeframe3 = document.getElementById('timeframe3').value;
+            const timeframe4 = document.getElementById('timeframe4').value;
+            const mindset = document.getElementById('mindset').value.trim();
+            const screenshot = document.getElementById('screenshot').value.trim();
+
+            let timeInputVal = document.getElementById('liveDateTimeStr').value.trim();
+            if (!timeInputVal) {
+                timeInputVal = new Date().toTimeString().split(' ')[0];
+            }
+
+            if (!symbol || !outcome || !position || rValue === "" || pnlAmount === "" || !theory || !strategyMode || !timeframe || !mindset || !screenshot) {
+                return false;
+            }
+
+            if (!fileHandleGlobal) {
+                const panel = document.getElementById('fileSyncPanelLocation');
+                panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                panel.classList.add('alert-flash');
+                return false;
+            }
+
+            const finalR = parseFloat(rValue);
+            const finalPnl = parseFloat(pnlAmount);
+            let activeAccountName = currentAccount;
+
+            if (activeOrderIndexGlobal !== -1) {
+                let dayAllTrades = trades.filter(t => t.date === selectedDateGlobal);
+                let targetTrade = dayAllTrades[activeOrderIndexGlobal];
+                let idx = trades.findIndex(t => t.id === targetTrade.id);
+                if (idx !== -1) {
+                    trades[idx].symbol = symbol;
+                    trades[idx].outcome = outcome;
+                    trades[idx].position = position;
+                    trades[idx].rValue = finalR;
+                    trades[idx].pnlAmount = finalPnl;
+                    trades[idx].theory = theory;
+                    trades[idx].strategyMode = strategyMode;
+                    trades[idx].timeframe = timeframe;
+                    trades[idx].timeframe2 = timeframe2;
+                    trades[idx].timeframe3 = timeframe3;
+                    trades[idx].timeframe4 = timeframe4;
+                    trades[idx].mindset = mindset;
+                    trades[idx].screenshot = screenshot;
+                    trades[idx].time = timeInputVal;
+                    trades[idx].date = selectedDateGlobal;
+                }
+            } else {
+                const mainTrade = {
+                    id: Date.now() + "_" + Math.floor(Math.random()*100),
+                    account: activeAccountName,
+                    date: selectedDateGlobal,
+                    time: timeInputVal,
+                    symbol: symbol,
+                    position: position,
+                    rValue: finalR,
+                    outcome: outcome,
+                    pnlAmount: finalPnl,
+                    theory: theory,
+                    strategyMode: strategyMode,
+                    timeframe: timeframe,
+                    timeframe2: timeframe2,
+                    timeframe3: timeframe3,
+                    timeframe4: timeframe4,
+                    mindset: mindset,
+                    screenshot: screenshot
+                };
+                trades.push(mainTrade);
+                
+                document.querySelectorAll('input[name="syncAccountCheck"]:checked').forEach((cb, i) => {
+                    trades.push({ ...mainTrade, id: Date.now() + "_sync_" + i + "_" + Math.floor(Math.random()*100), account: cb.value });
+                });
+            }
+            
+            localStorage.setItem('trading_data', JSON.stringify(trades));
+            activeOrderIndexGlobal = -1;
+            refreshDayState();
+            triggerBackgroundFileSync();
+        }
+
+        async function initFileHandle() {
+            try {
+                if ('showSaveFilePicker' in window) {
+                    fileHandleGlobal = await window.showSaveFilePicker({
+                        suggestedName: 'Kenji_Trading_Data.json',
+                        types: [{
+                            description: 'JSON Files',
+                            accept: { 'application/json': ['.json'] },
+                        }],
+                    });
+                    document.getElementById('fileStatusBadge').innerText = "已鏈結覆蓋";
+                    document.getElementById('fileStatusBadge').className = "file-status-badge file-status-linked";
+                    
+                    document.getElementById('fileSyncPanelLocation').classList.remove('alert-flash');
+                    
+                    triggerBackgroundFileSync();
+                } else {
+                    alert("瀏覽器不支援本地檔案直接覆蓋 API (FileSystem API)，請換用最新版 Chrome 或 Edge 瀏覽器。");
+                }
+            } catch (err) {
+                console.error("未能獲取檔案控制權:", err);
+            }
+        }
+
+        async function triggerBackgroundFileSync() {
+            if (!fileHandleGlobal) return; 
+            const dataStr = JSON.stringify(trades, null, 2);
+            try {
+                const writable = await fileHandleGlobal.createWritable();
+                await writable.write(dataStr);
+                await writable.close();
+                console.log("Kenji 自動覆蓋文件成功。");
+            } catch (err) {
+                console.error("自動覆蓋寫入失敗: ", err);
+            }
+        }
+
+        function deleteCurrentSelectedOrder() {
+            if (activeOrderIndexGlobal === -1) return;
+            let dayAllTrades = trades.filter(t => t.date === selectedDateGlobal);
+            let targetTrade = dayAllTrades[activeOrderIndexGlobal];
+            trades = trades.filter(t => t.id !== targetTrade.id);
+            localStorage.setItem('trading_data', JSON.stringify(trades));
+            activeOrderIndexGlobal = -1;
+            refreshDayState();
+            triggerBackgroundFileSync();
+        }
+
+        function resetToToday() {
+            activeOrderIndexGlobal = -1;
+            refreshDayState();
+        }
+
+        function renderIntradayBarChart() {
+            const canvas = document.getElementById('intradayBarChartCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            let dayAllTrades = trades.filter(t => t.date === selectedDateGlobal);
+            
+            let barLabels = [];
+            let barValues = [];
+            let barColors = [];
+
+            dayAllTrades.forEach((t, index) => {
+                barLabels.push(`${index + 1} Trade`); 
+                let pnl = Number(t.pnlAmount) || 0;
+                barValues.push(pnl); 
+                barColors.push(pnl >= 0 ? '#00ffa3' : '#ff3b30'); 
+            });
+
+            let maxVal = Math.max(...barValues, 0);
+            let minVal = Math.min(...barValues, 0);
+            
+            let yMaxLimit = maxVal > 0 ? maxVal * 1.35 : 100;
+            let yMinLimit = minVal < 0 ? minVal * 1.35 : -100;
+
+            if (barValues.length === 0) {
+                barLabels = ['No Trade'];
+                barValues = [0];
+                barColors = ['rgba(255,255,255,0.05)'];
+                yMaxLimit = 100;
+                yMinLimit = -100;
+            }
+
+            if (intradayBarChart) {
+                intradayBarChart.data.labels = barLabels;
+                intradayBarChart.data.datasets[0].data = barValues;
+                intradayBarChart.data.datasets[0].backgroundColor = barColors;
+                intradayBarChart.data.datasets[0].borderColor = barColors;
+                intradayBarChart.options.scales.yAxes[0].ticks.max = yMaxLimit;
+                intradayBarChart.options.scales.yAxes[0].ticks.min = yMinLimit;
+                intradayBarChart.update();
+                return;
+            }
+
+            intradayBarChart = new Chart(ctx, {
+                type: 'bar', 
+                data: {
+                    labels: barLabels,
+                    datasets: [{
+                        data: barValues,
+                        backgroundColor: barColors,
+                        borderColor: barColors,
+                        borderWidth: 1,
+                        barPercentage: 0.4,
+                        categoryPercentage: 1.0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    legend: { display: false },
+                    tooltips: { enabled: false }, 
+                    hover: { mode: null },        
+                    layout: { padding: { top: 20, bottom: 5 } },
+                    scales: {
+                        xAxes: [{
+                            display: true,
+                            ticks: { fontColor: '#94a3b8', fontSize: 9, fontWeight: '700', padding: 10 },
+                            gridLines: { display: false }
+                        }],
+                        yAxes: [{
+                            display: true,
+                            ticks: { 
+                                fontColor: '#64748b', 
+                                fontSize: 9, 
+                                beginAtZero: true,
+                                max: yMaxLimit, 
+                                min: yMinLimit, 
+                                callback: function(value) {
+                                    let roundedVal = Math.floor(value);
+                                    if (roundedVal < 0) return '-$' + Math.abs(roundedVal);
+                                    return '$' + roundedVal;
+                                }
+                            },
+                            gridLines: { color: 'rgba(255, 255, 255, 0.03)', zeroLineColor: 'rgba(255, 255, 255, 0.25)', zeroLineWidth: 1 }
+                        }]
+                    },
+                    plugins: {
+                        datalabels: {
+                            align: function(context) {
+                                let value = context.dataset.data[context.dataIndex];
+                                return value >= 0 ? 'top' : 'bottom';
+                            },
+                            anchor: function(context) {
+                                let value = context.dataset.data[context.dataIndex];
+                                return value >= 0 ? 'end' : 'start';
+                            },
+                            offset: 5, 
+                            color: function(context) {
+                                let value = context.dataset.data[context.dataIndex];
+                                return value >= 0 ? '#00ffa3' : '#ff3b30';
+                            },
+                            font: { weight: '900', size: 11, family: 'monospace' },
+                            formatter: (value) => {
+                                if (value === 0) return '';
+                                let roundedVal = Math.floor(value);
+                                if (roundedVal < 0) return '-$' + Math.abs(roundedVal);
+                                return '+$' + roundedVal;
+                            },
+                            textShadowColor: '#000000',
+                            textShadowBlur: 5
+                        }
+                    }
+                }
+            });
+        }
+
+        function switchChartTab(mode) {
+            activeChartTabGlobal = mode;
+            document.getElementById('btn_tab_monthly').classList.toggle('active', mode === 'monthly');
+            document.getElementById('btn_tab_equity').classList.toggle('active', mode === 'equity');
+            renderMainLineChartCombined();
+        }
+
+        function renderMainLineChartCombined() {
+            const canvas = document.getElementById('mainLineChartCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            let daysInMonth = getDaysInMonth(currentYear, currentMonth);
+
+            if (activeChartTabGlobal === 'monthly') {
+                document.getElementById('mainChartPanelTitle').innerText = `📊 ${currentMonth}月 每日盈虧趨勢`;
+                
+                let labels = [];
+                let data = [];
+                for (let d = 1; d <= daysInMonth; d++) {
+                    labels.push(`${d}日`);
+                    let dateStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    let mTrades = trades.filter(t => t.date === dateStr);
+                    let sum = mTrades.reduce((s, t) => s + (Number(t.pnlAmount) || 0), 0);
+                    data.push(sum);
+                }
+
+                let maxVal = Math.max(...data, 0);
+                let minVal = Math.min(...data, 0);
+                let yMaxLimit = maxVal > 0 ? maxVal * 1.30 : 100;
+                let yMinLimit = minVal < 0 ? minVal * 1.30 : -100;
+
+                let gradientGlow = ctx.createLinearGradient(0, 0, 0, 260);
+                gradientGlow.addColorStop(0, 'rgba(0, 242, 254, 0.25)');
+                gradientGlow.addColorStop(1, 'rgba(0, 242, 254, 0.0)');
+
+                if (mainLineChart) mainLineChart.destroy();
+
+                mainLineChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Account PnL',
+                            data: data,
+                            borderColor: '#00f2fe',
+                            borderWidth: 3,
+                            backgroundColor: gradientGlow,
+                            pointRadius: 0,
+                            pointHitRadius: 10,
+                            pointHoverRadius: 0,
+                            lineTension: 0.3,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        legend: { display: false },
+                        tooltips: { enabled: false }, 
+                        hover: { mode: null },        
+                        layout: { padding: { top: 35, bottom: 15, left: 10, right: 15 } },
+                        scales: {
+                            xAxes: [{ ticks: { fontColor: '#64748b', fontSize: 10, padding: 12 }, gridLines: { display: false } }],
+                            yAxes: [{ 
+                                ticks: { 
+                                    fontColor: '#64748b', 
+                                    fontSize: 10,
+                                    max: yMaxLimit,
+                                    min: yMinLimit,
+                                    callback: function(value) {
+                                        if (value < 0) return '-$' + Math.abs(value);
+                                        return '$' + value;
+                                    }
+                                }, 
+                                gridLines: { color: 'rgba(255,255,255,0.04)' } 
+                            }]
+                        },
+                        plugins: { 
+                            datalabels: {
+                                display: function(context) {
+                                    let value = context.dataset.data[context.dataIndex];
+                                    if (value === 0) return false;
+                                    let nonZeroPoints = context.dataset.data.filter(v => v !== 0).length;
+                                    if (nonZeroPoints > 15) { return context.dataIndex % 2 === 0; }
+                                    return true;
+                                },
+                                align: function(context) {
+                                    let value = context.dataset.data[context.dataIndex];
+                                    return value >= 0 ? 'top' : 'bottom';
+                                },
+                                anchor: function(context) {
+                                    let value = context.dataset.data[context.dataIndex];
+                                    return value >= 0 ? 'end' : 'start';
+                                },
+                                offset: 6,
+                                color: function(context) {
+                                    let value = context.dataset.data[context.dataIndex];
+                                    return value >= 0 ? '#00ffa3' : '#ff3b30';
+                                },
+                                font: { weight: '800', size: 10, family: 'monospace' },
+                                fontFormatter: (value) => {
+                                    if (value < 0) return '-$' + Math.abs(value);
+                                    return '+$' + value;
+                                },
+                                textShadowColor: '#000000',
+                                textShadowBlur: 4
+                            }
+                        }
+                    }
+                });
+
+            } else if (activeChartTabGlobal === 'equity') {
+                document.getElementById('mainChartPanelTitle').innerText = `📈 歷史盈虧資產淨值`;
+                
+                let totalInitialBalance = accounts.reduce((sum, a) => sum + (Number(a.balance) || 0), 0);
+                let allTradesSorted = [...trades];
+                
+                allTradesSorted.sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
+
+                let labels = ['Start'];
+                let data = [totalInitialBalance];
+                let runningBalance = totalInitialBalance;
+
+                let uniqueDates = new Set(allTradesSorted.map(t => t.date));
+                let useMonthLabel = uniqueDates.size > 25; 
+
+                allTradesSorted.forEach((t) => {
+                    runningBalance += (Number(t.pnlAmount) || 0);
+                    if (useMonthLabel) {
+                        labels.push(t.date.substring(0, 7));
+                    } else {
+                        labels.push(t.date);
+                    }
+                    data.push(runningBalance);
+                });
+
+                let maxVal = Math.max(...data, totalInitialBalance);
+                let minVal = Math.min(...data, totalInitialBalance);
+                let yMaxLimit = maxVal * 1.25;
+                let yMinLimit = minVal < 0 ? minVal * 1.25 : minVal * 0.75;
+
+                let gradientGlow = ctx.createLinearGradient(0, 0, 0, 260);
+                gradientGlow.addColorStop(0, 'rgba(0, 255, 163, 0.25)');
+                gradientGlow.addColorStop(1, 'rgba(0, 255, 163, 0.0)');
+
+                if (mainLineChart) mainLineChart.destroy();
+
+                mainLineChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Total Equity',
+                            data: data,
+                            borderColor: '#00ffa3',
+                            borderWidth: 3,
+                            backgroundColor: gradientGlow,
+                            pointRadius: 0,
+                            pointHitRadius: 10,
+                            pointHoverRadius: 0,
+                            lineTension: 0.1,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        legend: { display: false },
+                        tooltips: { enabled: false }, 
+                        hover: { mode: null },        
+                        layout: { padding: { top: 35, bottom: 15, left: 10, right: 15 } },
+                        scales: {
+                            xAxes: [{ ticks: { fontColor: '#64748b', fontSize: 10, maxTicksLimit: 15, autoSkip: true, padding: 12 }, gridLines: { display: false } }],
+                            yAxes: [{ 
+                                ticks: { 
+                                    fontColor: '#64748b', 
+                                    fontSize: 10,
+                                    max: yMaxLimit,
+                                    min: yMinLimit,
+                                    callback: function(value) {
+                                        if (value < 0) return '-$' + Math.abs(value);
+                                        return '$' + value;
+                                    }
+                                }, 
+                                gridLines: { color: 'rgba(255,255,255,0.04)' } 
+                            }]
+                        },
+                        plugins: { 
+                            datalabels: {
+                                display: function(context) {
+                                    if (context.dataIndex === 0) return false;
+                                    let totalPoints = context.dataset.data.length;
+                                    if (totalPoints > 20) { return context.dataIndex % 2 === 0; }
+                                    return true;
+                                },
+                                align: function(context) {
+                                    let value = context.dataset.data[context.dataIndex];
+                                    return value >= 0 ? 'top' : 'bottom';
+                                },
+                                anchor: function(context) {
+                                    let value = context.dataset.data[context.dataIndex];
+                                    return value >= 0 ? 'end' : 'start';
+                                },
+                                offset: 6,
+                                color: function(context) {
+                                    let value = context.dataset.data[context.dataIndex];
+                                    return value >= 0 ? '#00ffa3' : '#ff3b30';
+                                },
+                                font: { weight: '800', size: 9, family: 'monospace' },
+                                formatter: (value) => {
+                                    if (value < 0) return '-$' + Math.abs(value);
+                                    return '$' + value;
+                                },
+                                textShadowColor: '#000000',
+                                textShadowBlur: 4
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>
