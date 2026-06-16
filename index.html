@@ -183,6 +183,7 @@
             grid-column: span 4;
             display: flex;
             flex-direction: column;
+            height: 100%;
         }
 
         /* 底層滿格佈局架構 */
@@ -227,6 +228,7 @@
             flex-direction: column;
             gap: 24px;
             box-sizing: border-box;
+            height: 100%;
         }
 
         .stats-left-part {
@@ -238,10 +240,12 @@
         .pie-right-part {
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            justify-content: flex-start;
+            align-items: stretch;
             margin-top: 10px;
             width: 100%;
+            height: 100%;
+            flex-grow: 1;
         }
 
         .chart-full-width-card {
@@ -672,7 +676,7 @@
 
         .timeframe-grid-layout {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 8px;
         }
 
@@ -735,6 +739,17 @@
             text-shadow: none;
         }
 
+        .btn-return-style {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
+            box-shadow: 0 4px 15px rgba(56, 239, 125, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.2) !important;
+            border-bottom: 3px solid rgba(0, 0, 0, 0.3) !important;
+        }
+        .btn-return-style:hover {
+            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 50%, #ec4899 100%) !important;
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.6) !important;
+            color: #000000 !important;
+        }
+
         .delete-zone { margin-top: 14px; padding-top: 14px; border-top: 1px dashed #222c3c; }
         
         .btn-delete-order {
@@ -751,19 +766,6 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(6, 182, 212, 0.6);
             color: #000000 !important;
-        }
-
-        .btn-mini { padding: 8px 14px; font-size: 11.5px; background: linear-gradient(145deg, #1e293b, #0f172a); color: #fff; border: 1px solid rgba(255,255,255,0.03); border-radius: 6px; cursor: pointer; font-weight: 700; transition: all 0.2s; }
-        
-        .btn-add-account {
-            background: linear-gradient(135deg, #e11d48 0%, #be123c 100%) !important;
-            box-shadow: 0 4px 10px rgba(225, 29, 72, 0.3) !important;
-            border: 1px solid rgba(244, 63, 94, 0.4) !important;
-        }
-        .btn-add-account:hover {
-            background: linear-gradient(135deg, #10b981 0%, #06b6d4 50%, #3b82f6 100%) !important;
-            color: #000000 !important;
-            box-shadow: 0 6px 18px rgba(6, 182, 212, 0.6) !important;
         }
 
         .btn-danger-mini-red {
@@ -788,25 +790,14 @@
         }
 
         .btn-export-mini-blue {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
-            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.25) !important;
+            background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%) !important;
+            box-shadow: 0 4px 10px rgba(14, 165, 233, 0.25) !important;
             color: #ffffff !important;
         }
         .btn-export-mini-blue:hover {
-            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #1d4ed8 100%) !important;
+            background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 50%, #0284c7 100%) !important;
             color: #000000 !important;
-            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6) !important;
-        }
-
-        .btn-logout-mini-orange {
-            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
-            box-shadow: 0 4px 10px rgba(249, 115, 22, 0.25) !important;
-            color: #ffffff !important;
-        }
-        .btn-logout-mini-orange:hover {
-            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%) !important;
-            color: #000000 !important;
-            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.6) !important;
+            box-shadow: 0 6px 20px rgba(56, 189, 248, 0.6) !important;
         }
 
         .calendar-picker-wrapper { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; position: relative; }
@@ -975,6 +966,20 @@
         .account-manage-title { font-size: 13px; color: #00f2fe; font-weight: 700; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .account-action-row { display: flex; gap: 10px; margin-top: 12px; }
         
+        /* 迷你帳戶操作按鈕基礎與美化樣式 */
+        .btn-mini { padding: 8px 14px; font-size: 11.5px; background: linear-gradient(145deg, #1e293b, #0f172a); color: #fff; border: 1px solid rgba(255,255,255,0.03); border-radius: 6px; cursor: pointer; font-weight: 700; transition: all 0.2s; display: flex; justify-content: center; align-items: center; gap: 4px; }
+        
+        .btn-add-account {
+            background: linear-gradient(135deg, #e11d48 0%, #be123c 100%) !important;
+            box-shadow: 0 4px 10px rgba(225, 29, 72, 0.3) !important;
+            border: 1px solid rgba(244, 63, 94, 0.4) !important;
+        }
+        .btn-add-account:hover {
+            background: linear-gradient(135deg, #10b981 0%, #06b6d4 50%, #3b82f6 100%) !important;
+            color: #000000 !important;
+            box-shadow: 0 6px 18px rgba(6, 182, 212, 0.6) !important;
+        }
+
         /* 賽步美化：風控與剩餘額度面板 */
         .account-balance-panel {
             background: linear-gradient(145deg, #020408, #0b0f19);
@@ -1064,6 +1069,9 @@
             padding: 12px;
             margin-top: 15px;
             box-sizing: border-box;
+            flex-grow: 1; 
+            display: flex; 
+            flex-direction: column;
         }
 
         /* 歷史表格與策略篩選控制區樣式 */
@@ -1213,7 +1221,7 @@
                 <div class="account-manage-title">
                     <span>💳 當前操作帳號設定</span>
                     <div style="display: flex; gap: 8px;">
-                        <button type="button" class="btn-mini btn-logout-mini-orange" onclick="logoutFirebase()">🚪 登出</button>
+                        <button type="button" class="btn-mini" style="color:#94a3b8; border-color: rgba(255,255,255,0.1);" onclick="logoutFirebase()">🚪 登出</button>
                         <button type="button" class="btn-mini btn-add-account" onclick="addNewAccountPrompt()">➕ 新增帳號</button>
                     </div>
                 </div>
@@ -1234,8 +1242,8 @@
 
                 <div class="account-action-row">
                     <button type="button" class="btn-mini btn-danger-mini-red" style="flex: 1;" onclick="deleteCurrentAccount()">🗑️ 刪除帳號</button>
-                    <button type="button" class="btn-mini btn-export-mini-blue" style="flex: 1;" onclick="exportTradingData()">📤 匯出數據</button>
-                    <button type="button" class="btn-mini btn-import-mini-green" style="flex: 1;" onclick="triggerFileInput()">📥 匯入數據</button>
+                    <button type="button" class="btn-mini btn-import-mini-green" style="flex: 1;" onclick="triggerFileInput()">📥 匯入</button>
+                    <button type="button" class="btn-mini btn-export-mini-blue" style="flex: 1;" onclick="exportTradingData()">📤 匯出</button>
                     <input type="file" id="hiddenFileInput" accept=".json" onchange="importTradingData(event)">
                 </div>
 
@@ -1343,14 +1351,6 @@
                                 <option value="4H">4H</option>
                             </select>
                             <select id="timeframe4">
-                                <option value="NO" selected>NO</option>
-                                <option value="1M">1M</option>
-                                <option value="5M">5M</option>
-                                <option value="15M">15M</option>
-                                <option value="1H">1H</option>
-                                <option value="4H">4H</option>
-                            </select>
-                            <select id="timeframe5">
                                 <option value="NO" selected>NO</option>
                                 <option value="1M">1M</option>
                                 <option value="5M">5M</option>
@@ -1466,7 +1466,7 @@
                     
                     <div class="intraday-bar-panel">
                         <div class="mini-chart-title" id="intradayChartTitle" style="font-size:11px; margin-bottom:6px; color:#4facfe;">⚡ Intraday PnL</div>
-                        <div style="position:relative; width:100%; height:140px;">
+                        <div style="position:relative; width:100%; flex-grow: 1; min-height: 200px;">
                             <canvas id="intradayBarChartCanvas"></canvas>
                         </div>
                     </div>
@@ -1482,19 +1482,74 @@
                 <div class="mini-chart-title" style="margin-bottom: 0; font-size: 13px; color: #00f2fe; letter-spacing: 1px;">📋 交易數據歷史</div>
                 <div class="strategy-winrate-box">
                     <div>
-                        <select id="strategyFilterSelect" class="strategy-select-mini" onchange="calculateStrategyWinRates()">
+                        <select id="strategyFilterSelect" class="strategy-select-mini" onchange="calculateStrategyWinRates()" title="策略種類">
                             <option value="ALL">ALL Strategy</option>
                             <option value="OB">OB</option>
                             <option value="ORB">ORB</option>
                             <option value="無跟策略">無跟策略</option>
                         </select>
                     </div>
-                    <div class="winrate-indicator-item">1M:<span id="wr_1m">0%</span></div>
-                    <div class="winrate-indicator-item">5M:<span id="wr_5m">0%</span></div>
-                    <div class="winrate-indicator-item">15M:<span id="wr_15m">0%</span></div>
-                    <div class="winrate-indicator-item">1H:<span id="wr_1h">0%</span></div>
-                    <div class="winrate-indicator-item">4H:<span id="wr_4h">0%</span></div>
-                    <div class="winrate-indicator-item">ALL:<span id="wr_all">0%</span></div>
+                    <div>
+                        <select id="modeFilterSelect" class="strategy-select-mini" onchange="calculateStrategyWinRates()" title="策略模式">
+                            <option value="ALL">ALL Mode</option>
+                            <option value="NO">NO</option>
+                            <option value="ONLY ONE">ONLY ONE</option>
+                            <option value="PLUS">PLUS</option>
+                            <option value="STRONG">STRONG</option>
+                        </select>
+                    </div>
+                    
+                    <div style="display: flex; gap: 4px; align-items: center;">
+                        <span style="font-size: 11px; color: #64748b; font-weight: 800; text-transform: uppercase;">TFs:</span>
+                        <select id="filterTf1" class="strategy-select-mini" onchange="calculateStrategyWinRates()" title="過濾時區 1">
+                            <option value="ALL">ALL</option>
+                            <option value="NO">NO</option>
+                            <option value="1M">1M</option>
+                            <option value="5M">5M</option>
+                            <option value="15M">15M</option>
+                            <option value="1H">1H</option>
+                            <option value="4H">4H</option>
+                        </select>
+                        <select id="filterTf2" class="strategy-select-mini" onchange="calculateStrategyWinRates()" title="過濾時區 2">
+                            <option value="ALL">ALL</option>
+                            <option value="NO">NO</option>
+                            <option value="1M">1M</option>
+                            <option value="5M">5M</option>
+                            <option value="15M">15M</option>
+                            <option value="1H">1H</option>
+                            <option value="4H">4H</option>
+                        </select>
+                        <select id="filterTf3" class="strategy-select-mini" onchange="calculateStrategyWinRates()" title="過濾時區 3">
+                            <option value="ALL">ALL</option>
+                            <option value="NO">NO</option>
+                            <option value="1M">1M</option>
+                            <option value="5M">5M</option>
+                            <option value="15M">15M</option>
+                            <option value="1H">1H</option>
+                            <option value="4H">4H</option>
+                        </select>
+                        <select id="filterTf4" class="strategy-select-mini" onchange="calculateStrategyWinRates()" title="過濾時區 4">
+                            <option value="ALL">ALL</option>
+                            <option value="NO">NO</option>
+                            <option value="1M">1M</option>
+                            <option value="5M">5M</option>
+                            <option value="15M">15M</option>
+                            <option value="1H">1H</option>
+                            <option value="4H">4H</option>
+                        </select>
+                    </div>
+                    
+                    <div class="winrate-indicator-item" style="border-left: 1px solid #1e293b; padding-left: 10px;">Filtered WR:<span id="wr_filtered" style="color: #00ffa3;">0%</span></div>
+                    <div class="winrate-indicator-item">Count:<span id="filtered_trades_count" style="color: #00f2fe;">0</span></div>
+                    
+                    <div style="display: flex; gap: 8px; margin-left: 10px; border-left: 1px solid #1e293b; padding-left: 10px;">
+                        <div class="winrate-indicator-item">1M:<span id="wr_1m">0%</span></div>
+                        <div class="winrate-indicator-item">5M:<span id="wr_5m">0%</span></div>
+                        <div class="winrate-indicator-item">15M:<span id="wr_15m">0%</span></div>
+                        <div class="winrate-indicator-item">1H:<span id="wr_1h">0%</span></div>
+                        <div class="winrate-indicator-item">4H:<span id="wr_4h">0%</span></div>
+                        <div class="winrate-indicator-item">ALL:<span id="wr_all">0%</span></div>
+                    </div>
                 </div>
             </div>
             <div class="trade-data-table-wrapper">
@@ -1564,6 +1619,7 @@
         let clockTimerToken = null;
         let isClockPaused = false;
 
+        // Firebase Setup & Variables
         let user = null;
         let auth, db;
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'mytradingrecords-8838e';
@@ -1588,9 +1644,10 @@
                 auth = getAuth(app);
                 db = getFirestore(app);
 
+                // 監聽登入狀態：一旦成功登入，系統會自動將密碼鎖畫面隱藏
                 onAuthStateChanged(auth, (u) => {
                     user = u;
-                    if (u) {
+                    if (u && u.email) {
                         document.getElementById('passwordOverlay').style.display = 'none';
                         setupFirestoreListeners();
                     } else {
@@ -1613,15 +1670,18 @@
             }
         };
 
+        // 新增的登出功能
         async function logoutFirebase() {
-            try {
-                if(auth) {
+            if(confirm("確定要登出當前 GMAIL 帳號嗎？")) {
+                try {
                     await signOut(auth);
+                    window.location.reload();
+                } catch(err) {
+                    alert("登出失敗：" + err.message);
                 }
-            } catch(e) {
-                console.error("登出失敗:", e);
             }
         }
+        window.logoutFirebase = logoutFirebase;
 
         let unsubscribeTrades = null;
         let unsubscribeAccounts = null;
@@ -1632,6 +1692,7 @@
             if (unsubscribeTrades) unsubscribeTrades();
             if (unsubscribeAccounts) unsubscribeAccounts();
 
+            // 改用 user.email 作為資料庫的路徑，確保記錄綁定 Gmail 名稱
             const tradesCol = collection(db, 'artifacts', appId, 'users', user.email, 'trades');
             unsubscribeTrades = onSnapshot(tradesCol, (snapshot) => {
                 let tempTrades = [];
@@ -1643,6 +1704,7 @@
                     trades = tempTrades;
                     localStorage.setItem('trading_data', JSON.stringify(trades));
                 } else if (trades.length > 0) {
+                    // 若雲端是空的（第一次登入），把本地單同步上去您的專屬帳號
                     trades.forEach(t => firestoreSaveTrade(t));
                 }
                 refreshDayState();
@@ -1650,6 +1712,7 @@
                 console.error("Firestore trades listener failed:", error);
             });
 
+            // 改用 user.email 作為帳戶路徑
             const accountsCol = collection(db, 'artifacts', appId, 'users', user.email, 'accounts');
             unsubscribeAccounts = onSnapshot(accountsCol, (snapshot) => {
                 let tempAccounts = [];
@@ -1728,7 +1791,8 @@
             function updateClock() {
                 if (isClockPaused || activeOrderIndexGlobal !== -1) return;
                 const now = new Date();
-                const timeStr = now.toTimeString().substring(0, 5); 
+                // 限制只取 HH:MM，捨棄秒數
+                const timeStr = now.toTimeString().substr(0, 5); 
                 const liveEl = document.getElementById('liveDateTimeStr');
                 if (liveEl && !isClockPaused && activeOrderIndexGlobal === -1) {
                     liveEl.value = timeStr;
@@ -1755,6 +1819,7 @@
 
         function formatLiveTimeInput(input) {
             let val = input.value.replace(/[^\d]/g, '');
+            // 只允許 4 個數字 (HHMM)
             if (val.length > 4) val = val.substr(0, 4); 
             
             let formatted = '';
@@ -1762,7 +1827,7 @@
                 formatted += val.substr(0, 2);
             }
             if (val.length > 2) {
-                formatted += ':' + val.substr(2, 2); 
+                formatted += ':' + val.substr(2, 2);
             }
             input.value = formatted;
         }
@@ -1946,15 +2011,20 @@
             reader.readAsText(file);
         }
 
+        // 新增的匯出功能
         function exportTradingData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(trades, null, 2));
-            const dlAnchorElem = document.createElement('a');
-            dlAnchorElem.setAttribute("href", dataStr);
-            dlAnchorElem.setAttribute("download", `Kenji_Trading_Data_${getTodayDateStr()}.json`);
-            document.body.appendChild(dlAnchorElem);
-            dlAnchorElem.click();
-            dlAnchorElem.remove();
+            const dataStr = JSON.stringify(trades, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `Kenji_Trading_Data_${getTodayDateStr()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
+        window.exportTradingData = exportTradingData;
 
         function onMonthSelectorChange() {
             const val = document.getElementById('monthViewSelector').value;
@@ -2107,30 +2177,77 @@
 
         function calculateStrategyWinRates() {
             const selectedStrat = document.getElementById('strategyFilterSelect').value;
+            const selectedMode = document.getElementById('modeFilterSelect').value;
+            
+            const tf1 = document.getElementById('filterTf1').value;
+            const tf2 = document.getElementById('filterTf2').value;
+            const tf3 = document.getElementById('filterTf3').value;
+            const tf4 = document.getElementById('filterTf4').value;
+            
             let filteredTrades = [...trades];
             
             if (selectedStrat !== 'ALL') {
-                filteredTrades = filteredTrades.filter(t => (t.theory || '').toUpperCase() === selectedStrat);
+                filteredTrades = filteredTrades.filter(t => (t.theory || '').toUpperCase() === selectedStrat.toUpperCase());
             }
+            
+            if (selectedMode !== 'ALL') {
+                filteredTrades = filteredTrades.filter(t => (t.strategyMode || '').toUpperCase() === selectedMode.toUpperCase());
+            }
+            
+            const activeTfs = [tf1, tf2, tf3, tf4].filter(tf => tf !== 'ALL');
+            if (activeTfs.length > 0) {
+                filteredTrades = filteredTrades.filter(t => {
+                    const tradeTfs = [t.timeframe, t.timeframe2, t.timeframe3, t.timeframe4]
+                        .filter(x => x && x !== 'NO')
+                        .map(x => x.toUpperCase());
+                    
+                    return activeTfs.every(activeTf => {
+                        if (activeTf === 'NO') {
+                            return [t.timeframe, t.timeframe2, t.timeframe3, t.timeframe4]
+                                .some(x => !x || x.toUpperCase() === 'NO');
+                        }
+                        return tradeTfs.includes(activeTf.toUpperCase());
+                    });
+                });
+            }
+            
+            let wins = filteredTrades.filter(t => t.outcome === 'WIN').length;
+            let total = filteredTrades.length;
+            let wr = total > 0 ? ((wins / total) * 100).toFixed(0) + '%' : '0%';
+            
+            document.getElementById('wr_filtered').innerText = wr;
+            document.getElementById('filtered_trades_count').innerText = total;
 
             const timeframes = ['1M', '5M', '15M', '1H', '4H'];
-            
             timeframes.forEach(tf => {
-                let tfTrades = filteredTrades.filter(t => 
+                let tfTrades = [...trades];
+                if (selectedStrat !== 'ALL') {
+                    tfTrades = tfTrades.filter(t => (t.theory || '').toUpperCase() === selectedStrat.toUpperCase());
+                }
+                if (selectedMode !== 'ALL') {
+                    tfTrades = tfTrades.filter(t => (t.strategyMode || '').toUpperCase() === selectedMode.toUpperCase());
+                }
+                tfTrades = tfTrades.filter(t => 
                     (t.timeframe || '').toUpperCase() === tf ||
                     (t.timeframe2 || '').toUpperCase() === tf ||
                     (t.timeframe3 || '').toUpperCase() === tf ||
-                    (t.timeframe4 || '').toUpperCase() === tf ||
-                    (t.timeframe5 || '').toUpperCase() === tf
+                    (t.timeframe4 || '').toUpperCase() === tf
                 );
-                let wins = tfTrades.filter(t => t.outcome === 'WIN').length;
-                let total = tfTrades.length;
-                let wr = total > 0 ? ((wins / total) * 100).toFixed(0) + '%' : '0%';
-                document.getElementById(`wr_${tf.toLowerCase()}`).innerText = wr;
+                let tfWins = tfTrades.filter(t => t.outcome === 'WIN').length;
+                let tfTotal = tfTrades.length;
+                let tfWr = tfTotal > 0 ? ((tfWins / tfTotal) * 100).toFixed(0) + '%' : '0%';
+                document.getElementById(`wr_${tf.toLowerCase()}`).innerText = tfWr;
             });
 
-            let allWins = filteredTrades.filter(t => t.outcome === 'WIN').length;
-            let allTotal = filteredTrades.length;
+            let allBaseTrades = [...trades];
+            if (selectedStrat !== 'ALL') {
+                allBaseTrades = allBaseTrades.filter(t => (t.theory || '').toUpperCase() === selectedStrat.toUpperCase());
+            }
+            if (selectedMode !== 'ALL') {
+                allBaseTrades = allBaseTrades.filter(t => (t.strategyMode || '').toUpperCase() === selectedMode.toUpperCase());
+            }
+            let allWins = allBaseTrades.filter(t => t.outcome === 'WIN').length;
+            let allTotal = allBaseTrades.length;
             let allWr = allTotal > 0 ? ((allWins / allTotal) * 100).toFixed(0) + '%' : '0%';
             document.getElementById('wr_all').innerText = allWr;
         }
@@ -2150,7 +2267,6 @@
 
         function calculateZellaScore() {
             let srcTrades = [...trades];
-            
             srcTrades.sort((a, b) => a.date.localeCompare(b.date) || (a.time || "").localeCompare(a.time || ""));
 
             let totalTrades = srcTrades.length;
@@ -2439,6 +2555,7 @@
 
         function renderCalendarGrid() {
             const grid = document.getElementById('calendarGrid');
+            if (!grid) return;
             grid.innerHTML = "";
             let daysInMonth = getDaysInMonth(currentYear, currentMonth);
             let firstDay = getFirstDayOfWeek(currentYear, currentMonth);
@@ -2614,7 +2731,6 @@
                 document.getElementById('timeframe2').value = "NO";
                 document.getElementById('timeframe3').value = "NO";
                 document.getElementById('timeframe4').value = "NO";
-                document.getElementById('timeframe5').value = "NO";
                 document.getElementById('mindset').value = "";
                 document.getElementById('screenshot').value = "";
                 document.getElementById('screenshotContent').innerHTML = `<span style="color:#475569; font-size:13px;">🆕 請在左側輸入截圖網址並存檔</span>`;
@@ -2641,7 +2757,6 @@
                 document.getElementById('timeframe2').value = targetTrade.timeframe2 || "NO";
                 document.getElementById('timeframe3').value = targetTrade.timeframe3 || "NO";
                 document.getElementById('timeframe4').value = targetTrade.timeframe4 || "NO";
-                document.getElementById('timeframe5').value = targetTrade.timeframe5 || "NO";
                 document.getElementById('mindset').value = targetTrade.mindset || "";
                 document.getElementById('screenshot').value = targetTrade.screenshot || "";
 
@@ -2670,13 +2785,12 @@
             const timeframe2 = document.getElementById('timeframe2').value;
             const timeframe3 = document.getElementById('timeframe3').value;
             const timeframe4 = document.getElementById('timeframe4').value;
-            const timeframe5 = document.getElementById('timeframe5').value;
             const mindset = document.getElementById('mindset').value.trim();
             const screenshot = document.getElementById('screenshot').value.trim();
 
             let timeInputVal = document.getElementById('liveDateTimeStr').value.trim();
             if (!timeInputVal) {
-                timeInputVal = new Date().toTimeString().substring(0, 5);
+                timeInputVal = new Date().toTimeString().substr(0, 5);
             }
 
             if (!symbol || !outcome || !position || rValue === "" || pnlAmount === "" || !theory || !strategyMode || !timeframe || !mindset || !screenshot) {
@@ -2703,7 +2817,6 @@
                     trades[idx].timeframe2 = timeframe2;
                     trades[idx].timeframe3 = timeframe3;
                     trades[idx].timeframe4 = timeframe4;
-                    trades[idx].timeframe5 = timeframe5;
                     trades[idx].mindset = mindset;
                     trades[idx].screenshot = screenshot;
                     trades[idx].time = timeInputVal;
@@ -2728,7 +2841,6 @@
                     timeframe2: timeframe2,
                     timeframe3: timeframe3,
                     timeframe4: timeframe4,
-                    timeframe5: timeframe5,
                     mindset: mindset,
                     screenshot: screenshot
                 };
@@ -2992,6 +3104,7 @@
                 
                 let totalInitialBalance = accounts.reduce((sum, a) => sum + (Number(a.balance) || 0), 0);
                 let allTradesSorted = [...trades];
+                
                 allTradesSorted.sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
 
                 let labels = ['Start'];
@@ -3097,13 +3210,13 @@
             }
         }
 
+        // Expose modules to global window context for inline events
         window.onAccountSelectorChange = onAccountSelectorChange;
         window.addNewAccountPrompt = addNewAccountPrompt;
         window.deleteCurrentAccount = deleteCurrentAccount;
         window.triggerFileInput = triggerFileInput;
         window.importTradingData = importTradingData;
         window.exportTradingData = exportTradingData;
-        window.logoutFirebase = logoutFirebase;
         window.onTradeDateInputChange = onTradeDateInputChange;
         window.pauseLiveClock = pauseLiveClock;
         window.resumeLiveClock = resumeLiveClock;
@@ -3111,6 +3224,7 @@
         window.autoAdjustSign = autoAdjustSign;
         window.handleFormSubmit = handleFormSubmit;
         window.onMonthSelectorChange = onMonthSelectorChange;
+        window.calculateStrategyWinRates = calculateStrategyWinRates;
         window.switchChartTab = switchChartTab;
         window.deleteCurrentSelectedOrder = deleteCurrentSelectedOrder;
         window.previewImageInDashboard = previewImageInDashboard;
