@@ -1677,9 +1677,13 @@
         </div>
     </div>
 
-    <script>
-        let fileHandleGlobal = null;
+    <!-- Firebase Connection & Application Logic as an ES Module -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        let fileHandleGlobal = null;
         let defaultAccounts = [{ name: "Apex-Main-01", balance: 2000 }];
         let accounts = JSON.parse(localStorage.getItem('trading_accounts_v2')) || defaultAccounts;
         let currentAccount = localStorage.getItem('current_trading_account') || accounts[0].name;
@@ -1706,6 +1710,139 @@
         let activeChartTabGlobal = 'monthly';
         let clockTimerToken = null;
         let isClockPaused = false;
+
+        // Firebase Setup & Variables
+        let user = null;
+        let auth, db;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mytradingrecords-8838e';
+
+        const initFirebase = async () => {
+            let firebaseConfig;
+            if (typeof __firebase_config !== 'undefined') {
+                firebaseConfig = JSON.parse(__firebase_config);
+            } else {
+                firebaseConfig = {
+                    apiKey: "AIzaSyCQWq1hiCV-2PwLtTuLNp0Xd0OM91iqvG4",
+                    authDomain: "mytradingrecords-8838e.firebaseapp.com",
+                    projectId: "mytradingrecords-8838e",
+                    storageBucket: "mytradingrecords-8838e.firebasestorage.app",
+                    messagingSenderId: "272826359615",
+                    appId: "1:272826359615:web:dc37c91f0c7591bdcdfd8a"
+                };
+            }
+
+            try {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                // Strictly login first
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, (u) => {
+                    user = u;
+                    if (u) {
+                        setupFirestoreListeners();
+                    }
+                });
+            } catch (err) {
+                console.error("Firebase Connection/Authentication failed:", err);
+            }
+        };
+
+        let unsubscribeTrades = null;
+        let unsubscribeAccounts = null;
+
+        function setupFirestoreListeners() {
+            if (!user) return;
+
+            if (unsubscribeTrades) unsubscribeTrades();
+            if (unsubscribeAccounts) unsubscribeAccounts();
+
+            // Setup real-time listeners for collaborative public paths (Rule 1)
+            const tradesCol = collection(db, 'artifacts', appId, 'public', 'data', 'trades');
+            unsubscribeTrades = onSnapshot(tradesCol, (snapshot) => {
+                let tempTrades = [];
+                snapshot.forEach(doc => {
+                    tempTrades.push({ id: doc.id, ...doc.data() });
+                });
+                
+                if (tempTrades.length > 0) {
+                    trades = tempTrades;
+                    localStorage.setItem('trading_data', JSON.stringify(trades));
+                } else if (trades.length > 0) {
+                    // Provision local trades to cloud database if empty
+                    trades.forEach(t => firestoreSaveTrade(t));
+                }
+                refreshDayState();
+            }, (error) => {
+                console.error("Firestore trades listener failed:", error);
+            });
+
+            const accountsCol = collection(db, 'artifacts', appId, 'public', 'data', 'accounts');
+            unsubscribeAccounts = onSnapshot(accountsCol, (snapshot) => {
+                let tempAccounts = [];
+                snapshot.forEach(doc => {
+                    tempAccounts.push(doc.data());
+                });
+
+                if (tempAccounts.length > 0) {
+                    accounts = tempAccounts;
+                    localStorage.setItem('trading_accounts_v2', JSON.stringify(accounts));
+                } else if (accounts.length > 0) {
+                    // Provision local accounts to cloud database if empty
+                    accounts.forEach(a => firestoreSaveAccount(a));
+                }
+                renderAccountSelectorHTML();
+                refreshDayState();
+            }, (error) => {
+                console.error("Firestore accounts listener failed:", error);
+            });
+        }
+
+        async function firestoreSaveTrade(trade) {
+            if (!user) return;
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'trades', trade.id);
+                await setDoc(docRef, trade);
+            } catch (err) {
+                console.error("Firestore save trade failure:", err);
+            }
+        }
+
+        async function firestoreDeleteTrade(tradeId) {
+            if (!user) return;
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'trades', tradeId);
+                await deleteDoc(docRef);
+            } catch (err) {
+                console.error("Firestore delete trade failure:", err);
+            }
+        }
+
+        async function firestoreSaveAccount(acc) {
+            if (!user) return;
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'accounts', acc.name);
+                await setDoc(docRef, acc);
+            } catch (err) {
+                console.error("Firestore save account failure:", err);
+            }
+        }
+
+        async function firestoreDeleteAccount(accName) {
+            if (!user) return;
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'accounts', accName);
+                await deleteDoc(docRef);
+            } catch (err) {
+                console.error("Firestore delete account failure:", err);
+            }
+        }
 
         function verifyPassword() {
             const input = document.getElementById('passwordInput').value;
@@ -1791,15 +1928,16 @@
             }
         }
 
-        window.onload = function() {
+        window.addEventListener('load', () => {
             updateMonthDisplayLabelText(currentYear, currentMonth);
             document.getElementById('monthViewSelector').value = `${currentYear}-${currentMonth.toString().padStart(2, '0')}`;
             document.getElementById('tradeDateInput').value = selectedDateGlobal;
             renderAccountSelectorHTML();
             refreshDayState();
             startLiveClock();
+            initFirebase();
             document.getElementById('passwordInput').focus();
-        }
+        });
 
         function updateMonthDisplayLabelText(y, m) {
             const mm = String(m).padStart(2, '0');
@@ -1808,6 +1946,7 @@
 
         function renderAccountSelectorHTML() {
             const select = document.getElementById('currentAccountSelect');
+            if (!select) return;
             select.innerHTML = "";
 
             accounts.forEach(acc => {
@@ -1823,6 +1962,7 @@
 
         function renderSyncCheckboxes() {
             const container = document.getElementById('syncCheckboxGrid');
+            if (!container) return;
             container.innerHTML = "";
             let otherAccounts = accounts.filter(a => a.name !== currentAccount);
             if (otherAccounts.length === 0) {
@@ -1839,6 +1979,7 @@
 
         function refreshAccountBalanceDisplay() {
             const liveEl = document.getElementById('currentLiveBalance');
+            if (!liveEl) return;
             let accObj = accounts.find(a => a.name === currentAccount);
             if (!accObj) return;
             document.getElementById('currentInitialBalance').innerText = `$${accObj.balance}`;
@@ -1877,8 +2018,11 @@
             let bal = prompt("請輸入該帳號的初始可用風控額度 ($):", "2000");
             if (bal === null) return;
             let balNum = parseInt(bal) || 0;
-            accounts.push({ name: name, balance: balNum });
+            const newAcc = { name: name, balance: balNum };
+            accounts.push(newAcc);
             localStorage.setItem('trading_accounts_v2', JSON.stringify(accounts));
+            firestoreSaveAccount(newAcc);
+
             currentAccount = name;
             localStorage.setItem('current_trading_account', currentAccount);
             renderAccountSelectorHTML();
@@ -1891,7 +2035,14 @@
                 return;
             }
             if (!confirm(`警告：您確定要刪除帳號 [${currentAccount}] 嗎？該帳號下的所有交易歷史數據也將同步被抹除！`)) return;
+            
+            // Delete associated trades from Firestore
+            let tradesToDelete = trades.filter(t => t.account === currentAccount);
+            tradesToDelete.forEach(t => firestoreDeleteTrade(t.id));
+
             trades = trades.filter(t => t.account !== currentAccount);
+            firestoreDeleteAccount(currentAccount);
+
             accounts = accounts.filter(a => a.name !== currentAccount);
             localStorage.setItem('trading_accounts_v2', JSON.stringify(accounts));
             localStorage.setItem('trading_data', JSON.stringify(trades));
@@ -1927,6 +2078,7 @@
                             let exists = trades.some(existingTrade => existingTrade.id === t.id);
                             if (!exists) {
                                 trades.push(t);
+                                firestoreSaveTrade(t);
                             }
                         });
 
@@ -2010,8 +2162,10 @@
 
         function selectTradeFromHistoryTable(tradeId, tradeDate, tradeAccount) {
             if (!accounts.some(a => a.name === tradeAccount)) {
-                accounts.push({ name: tradeAccount, balance: 2000 });
+                const dummyAcc = { name: tradeAccount, balance: 2000 };
+                accounts.push(dummyAcc);
                 localStorage.setItem('trading_accounts_v2', JSON.stringify(accounts));
+                firestoreSaveAccount(dummyAcc);
                 renderAccountSelectorHTML();
             }
             
@@ -2032,7 +2186,6 @@
             activeOrderIndexGlobal = idx !== -1 ? idx : -1;
 
             refreshDayState();
-            
             document.getElementById('formTitle').scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
@@ -2191,7 +2344,6 @@
 
         function calculateZellaScore() {
             let srcTrades = [...trades];
-            
             srcTrades.sort((a, b) => a.date.localeCompare(b.date) || (a.time || "").localeCompare(a.time || ""));
 
             let totalTrades = srcTrades.length;
@@ -2480,6 +2632,7 @@
 
         function renderCalendarGrid() {
             const grid = document.getElementById('calendarGrid');
+            if (!grid) return;
             grid.innerHTML = "";
             let daysInMonth = getDaysInMonth(currentYear, currentMonth);
             let firstDay = getFirstDayOfWeek(currentYear, currentMonth);
@@ -2752,6 +2905,8 @@
                     trades[idx].screenshot = screenshot;
                     trades[idx].time = timeInputVal;
                     trades[idx].date = selectedDateGlobal;
+
+                    firestoreSaveTrade(trades[idx]);
                 }
             } else {
                 const mainTrade = {
@@ -2774,9 +2929,12 @@
                     screenshot: screenshot
                 };
                 trades.push(mainTrade);
+                firestoreSaveTrade(mainTrade);
                 
                 document.querySelectorAll('input[name="syncAccountCheck"]:checked').forEach((cb, i) => {
-                    trades.push({ ...mainTrade, id: Date.now() + "_sync_" + i + "_" + Math.floor(Math.random()*100), account: cb.value });
+                    const syncTrade = { ...mainTrade, id: Date.now() + "_sync_" + i + "_" + Math.floor(Math.random()*100), account: cb.value };
+                    trades.push(syncTrade);
+                    firestoreSaveTrade(syncTrade);
                 });
             }
             
@@ -2798,9 +2956,7 @@
                     });
                     document.getElementById('fileStatusBadge').innerText = "已鏈結覆蓋";
                     document.getElementById('fileStatusBadge').className = "file-status-badge file-status-linked";
-                    
                     document.getElementById('fileSyncPanelLocation').classList.remove('alert-flash');
-                    
                     triggerBackgroundFileSync();
                 } else {
                     alert("瀏覽器不支援本地檔案直接覆蓋 API (FileSystem API)，請換用最新版 Chrome 或 Edge 瀏覽器。");
@@ -2827,16 +2983,15 @@
             if (activeOrderIndexGlobal === -1) return;
             let dayAllTrades = trades.filter(t => t.date === selectedDateGlobal);
             let targetTrade = dayAllTrades[activeOrderIndexGlobal];
+            
             trades = trades.filter(t => t.id !== targetTrade.id);
             localStorage.setItem('trading_data', JSON.stringify(trades));
+            
+            firestoreDeleteTrade(targetTrade.id);
+
             activeOrderIndexGlobal = -1;
             refreshDayState();
             triggerBackgroundFileSync();
-        }
-
-        function resetToToday() {
-            activeOrderIndexGlobal = -1;
-            refreshDayState();
         }
 
         function renderIntradayBarChart() {
@@ -3070,7 +3225,6 @@
                 
                 let totalInitialBalance = accounts.reduce((sum, a) => sum + (Number(a.balance) || 0), 0);
                 let allTradesSorted = [...trades];
-                
                 allTradesSorted.sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
 
                 let labels = ['Start'];
@@ -3175,6 +3329,27 @@
                 });
             }
         }
+
+        // Expose modules to global window context for inline events
+        window.verifyPassword = verifyPassword;
+        window.onAccountSelectorChange = onAccountSelectorChange;
+        window.addNewAccountPrompt = addNewAccountPrompt;
+        window.deleteCurrentAccount = deleteCurrentAccount;
+        window.triggerFileInput = triggerFileInput;
+        window.importTradingData = importTradingData;
+        window.onTradeDateInputChange = onTradeDateInputChange;
+        window.pauseLiveClock = pauseLiveClock;
+        window.resumeLiveClock = resumeLiveClock;
+        window.formatLiveTimeInput = formatLiveTimeInput;
+        window.autoAdjustSign = autoAdjustSign;
+        window.handleFormSubmit = handleFormSubmit;
+        window.onMonthSelectorChange = onMonthSelectorChange;
+        window.initFileHandle = initFileHandle;
+        window.calculateStrategyWinRates = calculateStrategyWinRates;
+        window.switchChartTab = switchChartTab;
+        window.deleteCurrentSelectedOrder = deleteCurrentSelectedOrder;
+        window.previewImageInDashboard = previewImageInDashboard;
+        window.selectTradeFromHistoryTable = selectTradeFromHistoryTable;
     </script>
 </body>
 </html>
