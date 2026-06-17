@@ -1208,7 +1208,7 @@
                 </svg>
                 使用 GMAIL 帳戶登入
             </button>
-            <div style="margin-top: 20px; font-size: 11px; color: #475569; font-weight: bold; letter-spacing: 1px;">Version v0.0.7</div>
+            <div style="margin-top: 20px; font-size: 11px; color: #475569; font-weight: bold; letter-spacing: 1px;">Version v0.0.8</div>
         </div>
     </div>
 
@@ -2283,7 +2283,6 @@
             document.getElementById('wr_all').innerText = allWr;
         }
 
-        // 剩餘前端核心逻辑代碼繼續完整不漏噴出...
         function applyNeonStyleToBox(boxId, value) {
             const box = document.getElementById(boxId);
             if (!box) return;
@@ -2897,10 +2896,8 @@
             uniqueAccountsToUpdate.forEach(accName => {
                 let accObj = accounts.find(a => a.name === accName);
                 if (accObj) {
-                    let accTrades = trades.filter(t => t.account === accName);
-                    let sumPnl = accTrades.reduce((sum, t) => sum + (Number(t.pnlAmount) || 0), 0);
-                    let liveBalanceValue = accObj.balance + sumPnl;
-                    firestoreSaveAccount({ name: accObj.name, balance: liveBalanceValue });
+                    // 修正：保存帳戶時，應帶入原本的初始可用風控額（accObj.balance），而非計算損益後的 liveBalanceValue
+                    firestoreSaveAccount({ name: accObj.name, balance: accObj.balance });
                 }
             });
 
@@ -2921,10 +2918,8 @@
 
             let accObj = accounts.find(a => a.name === affectedAccountName);
             if (accObj) {
-                let accTrades = trades.filter(t => t.account === affectedAccountName);
-                let sumPnl = accTrades.reduce((sum, t) => sum + (Number(t.pnlAmount) || 0), 0);
-                let liveBalanceValue = accObj.balance + sumPnl;
-                firestoreSaveAccount({ name: accObj.name, balance: liveBalanceValue });
+                // 修正：刪除時亦應同步保持原始初始可用風控額不被改寫
+                firestoreSaveAccount({ name: accObj.name, balance: accObj.balance });
             }
 
             activeOrderIndexGlobal = -1;
