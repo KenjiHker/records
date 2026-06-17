@@ -1208,7 +1208,7 @@
                 </svg>
                 使用 GMAIL 帳戶登入
             </button>
-            <div style="margin-top: 20px; font-size: 11px; color: #475569; font-weight: bold; letter-spacing: 1px;">Version v0.0.5</div>
+            <div style="margin-top: 20px; font-size: 11px; color: #475569; font-weight: bold; letter-spacing: 1px;">Version v0.0.6</div>
         </div>
     </div>
 
@@ -2329,7 +2329,7 @@
             let rf = maxDdMoney === 0 ? (netProfit > 0 ? 4.0 : 0) : netProfit / maxDdMoney;
             let recoveryFactorScore = rf >= 4.0 ? 100 : (rf <= 0 ? 0 : (rf / 4.0) * 100);
 
-            let maxDrawdownScore = Math.max(0, 100 - (maxDdPercent * 3.33));
+            let netDrawdownScore = Math.max(0, 100 - (maxDdPercent * 3.33));
 
             let consistencyScore = 50; 
             if (totalTrades >= 2) {
@@ -2348,7 +2348,7 @@
                 Math.round(pfScore),
                 Math.round(avgWinLossScore),
                 Math.round(recoveryFactorScore),
-                Math.round(maxDrawdownScore),
+                Math.round(netDrawdownScore),
                 Math.round(consistencyScore)
             ];
 
@@ -2861,6 +2861,24 @@
             }
             
             localStorage.setItem('trading_data', JSON.stringify(trades));
+
+            // 更新當前操作帳號以及任何有勾選同步之帳號在 Firebase 上的 balance (當前剩餘額度)
+            let uniqueAccountsToUpdate = new Set([activeAccountName]);
+            if (activeOrderIndexGlobal === -1) {
+                document.querySelectorAll('input[name="syncAccountCheck"]:checked').forEach(cb => {
+                    uniqueAccountsToUpdate.add(cb.value);
+                });
+            }
+            uniqueAccountsToUpdate.forEach(accName => {
+                let accObj = accounts.find(a => a.name === accName);
+                if (accObj) {
+                    let accTrades = trades.filter(t => t.account === accName);
+                    let sumPnl = accTrades.reduce((sum, t) => sum + (Number(t.pnlAmount) || 0), 0);
+                    let liveBalanceValue = accObj.balance + sumPnl;
+                    firestoreSaveAccount({ name: accObj.name, balance: liveBalanceValue });
+                }
+            });
+
             activeOrderIndexGlobal = -1;
             refreshDayState();
         }
@@ -2869,11 +2887,21 @@
             if (activeOrderIndexGlobal === -1) return;
             let dayAllTrades = trades.filter(t => t.date === selectedDateGlobal);
             let targetTrade = dayAllTrades[activeOrderIndexGlobal];
+            let affectedAccountName = targetTrade.account;
             
             trades = trades.filter(t => t.id !== targetTrade.id);
             localStorage.setItem('trading_data', JSON.stringify(trades));
             
             firestoreDeleteTrade(targetTrade.id);
+
+            // 刪除該單後，動態重算並回寫受影響帳號在 Firebase 的 balance
+            let accObj = accounts.find(a => a.name === affectedAccountName);
+            if (accObj) {
+                let accTrades = trades.filter(t => t.account === affectedAccountName);
+                let sumPnl = accTrades.reduce((sum, t) => sum + (Number(t.pnlAmount) || 0), 0);
+                let liveBalanceValue = accObj.balance + sumPnl;
+                firestoreSaveAccount({ name: accObj.name, balance: liveBalanceValue });
+            }
 
             activeOrderIndexGlobal = -1;
             refreshDayState();
