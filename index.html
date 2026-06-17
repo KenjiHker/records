@@ -1208,7 +1208,7 @@
                 </svg>
                 使用 GMAIL 帳戶登入
             </button>
-            <div style="margin-top: 20px; font-size: 11px; color: #475569; font-weight: bold; letter-spacing: 1px;">Version v0.1.1</div>
+            <div style="margin-top: 20px; font-size: 11px; color: #475569; font-weight: bold; letter-spacing: 1px;">Version v0.1.2</div>
         </div>
     </div>
 
@@ -1231,12 +1231,12 @@
                 
                 <div class="account-balance-panel">
                     <div class="balance-row">
-                        <span class="balance-label">初始可用風控額 (Initial):</span>
+                        <span class="balance-label">今日可用風控額 (Daily Risk Limit):</span>
                         <span class="balance-value" id="currentInitialBalance" style="color: #00f2fe;">$4000</span>
                     </div>
                     <div class="balance-row">
                         <span class="balance-label">當前剩餘額度 (Live Balance):</span>
-                        <span class="balance-value" id="currentLiveBalance" style="color: #fff;">$0</span>
+                        <span class="balance-value" id="currentLiveBalance" style="color: #fff;">$4000</span>
                     </div>
                 </div>
 
@@ -1592,9 +1592,18 @@
         import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // 修正：依照需求將現有預設帳戶初始風控額設定為 4000
-        let defaultAccounts = [{ name: "Apex-Main-01", balance: 4000 }];
+        // V0.1.2 修改: 為了解決重疊計算 Bug，嚴格區分 Base(Initial) 與 Live Balance
+        let defaultAccounts = [{ name: "Apex-Main-01", initialBalance: 4000, balance: 4000 }];
         let accounts = JSON.parse(localStorage.getItem('trading_accounts_v2')) || defaultAccounts;
+        
+        // 遷移舊有資料，若無 initialBalance 則補上預設值 4000
+        accounts = accounts.map(a => {
+            if (a.initialBalance === undefined) {
+                a.initialBalance = 4000;
+            }
+            return a;
+        });
+
         let currentAccount = localStorage.getItem('current_trading_account') || accounts[0].name;
         
         if (currentAccount === "ALL_ACCOUNTS") {
@@ -1645,7 +1654,6 @@
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                // 監聽登入狀態：一旦成功登入，系統會自動將密碼鎖畫面隱藏
                 onAuthStateChanged(auth, (u) => {
                     user = u;
                     if (u && u.email) {
@@ -1656,7 +1664,6 @@
                     }
                 });
 
-                // 將登入點擊行為綁定為全局函數，提供更直接、即時的 Provider 例項化，避免彈出視窗被攔截或無反應
                 window.googleLoginBtnClick = async function() {
                     if (!auth) {
                         alert("Firebase 尚未完全載入，請稍候再試。");
@@ -1677,7 +1684,6 @@
             }
         };
 
-        // 新增的登出功能
         async function logoutFirebase() {
             if(confirm("確定要登出當前 GMAIL 帳號嗎？")) {
                 try {
@@ -1699,7 +1705,6 @@
             if (unsubscribeTrades) unsubscribeTrades();
             if (unsubscribeAccounts) unsubscribeAccounts();
 
-            // 改用 user.email 作為資料庫的路徑，確保記錄綁定 Gmail 名稱
             const tradesCol = collection(db, 'artifacts', appId, 'users', user.email, 'trades');
             unsubscribeTrades = onSnapshot(tradesCol, (snapshot) => {
                 let tempTrades = [];
@@ -1711,7 +1716,6 @@
                     trades = tempTrades;
                     localStorage.setItem('trading_data', JSON.stringify(trades));
                 } else if (trades.length > 0) {
-                    // 若雲端是空的（第一次登入），把本地單同步上去您的專屬帳號
                     trades.forEach(t => firestoreSaveTrade(t));
                 }
                 refreshDayState();
@@ -1719,12 +1723,13 @@
                 console.error("Firestore trades listener failed:", error);
             });
 
-            // 改用 user.email 作為帳戶路徑
             const accountsCol = collection(db, 'artifacts', appId, 'users', user.email, 'accounts');
             unsubscribeAccounts = onSnapshot(accountsCol, (snapshot) => {
                 let tempAccounts = [];
                 snapshot.forEach(doc => {
-                    tempAccounts.push(doc.data());
+                    let data = doc.data();
+                    if (data.initialBalance === undefined) data.initialBalance = 4000;
+                    tempAccounts.push(data);
                 });
 
                 if (tempAccounts.length > 0) {
@@ -1763,6 +1768,7 @@
         async function firestoreSaveAccount(acc) {
             if (!user || !user.email) return;
             try {
+                // 確保寫入 Firebase 時有明確寫入 initialBalance 和真正的 balance
                 const docRef = doc(db, 'artifacts', appId, 'users', user.email, 'accounts', acc.name);
                 await setDoc(docRef, acc);
             } catch (err) {
@@ -1798,7 +1804,6 @@
             function updateClock() {
                 if (isClockPaused || activeOrderIndexGlobal !== -1) return;
                 const now = new Date();
-                // 限制只取 HH:MM，捨棄秒數
                 const timeStr = now.toTimeString().substr(0, 5); 
                 const liveEl = document.getElementById('liveDateTimeStr');
                 if (liveEl && !isClockPaused && activeOrderIndexGlobal === -1) {
@@ -1826,7 +1831,6 @@
 
         function formatLiveTimeInput(input) {
             let val = input.value.replace(/[^\d]/g, '');
-            // 只允許 4 個數字 (HHMM)
             if (val.length > 4) val = val.substr(0, 4); 
             
             let formatted = '';
@@ -1861,7 +1865,6 @@
             startLiveClock();
             initFirebase();
 
-            // 方法二：JS 監聽並攔截 F12 / Ctrl+S / Ctrl+Shift+I 快捷鍵
             window.addEventListener('keydown', function (e) {
                 if (e.key === 'F12') {
                     e.preventDefault();
@@ -1877,11 +1880,9 @@
                 }
             });
 
-            // 方法四：定時檢測開發者工具打開狀態，若打開則清空網頁
             setInterval(function () {
-                // 修正：增加行動裝置過濾判定，防止 iPhone Safari 誤判
                 const isMobileDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-                if (isMobileDevice) return; // 若是手機或平板則不觸發安全鎖
+                if (isMobileDevice) return; 
 
                 const threshold = 160;
                 const widthThreshold = window.outerWidth - window.innerWidth > threshold;
@@ -1906,13 +1907,12 @@
                 let opt = document.createElement('option');
                 opt.value = acc.name;
                 
+                // 本地計算真實 Live Balance 呈現，確保顯示無誤
                 let accTrades = trades.filter(t => t.account === acc.name);
                 let sumPnl = accTrades.reduce((sum, t) => sum + (Number(t.pnlAmount) || 0), 0);
+                let liveBalanceValue = acc.initialBalance + sumPnl;
                 
-                // 修正：虧損扣減風控額，獲利時最高加到上限 (即 acc.balance 原始設定)，會加盈虧的只有 live balance
-                let liveBalance = acc.balance + sumPnl;
-                
-                opt.text = `💼 帳戶：${acc.name} (當前剩餘額度 $${liveBalance})`;
+                opt.text = `💼 帳戶：${acc.name} (當前剩餘額度 $${liveBalanceValue})`;
                 if (acc.name === currentAccount) opt.selected = true;
                 select.appendChild(opt);
             });
@@ -1939,28 +1939,57 @@
 
         function refreshAccountBalanceDisplay() {
             const liveEl = document.getElementById('currentLiveBalance');
-            if (!liveEl) return;
+            const initialEl = document.getElementById('currentInitialBalance');
+            if (!liveEl || !initialEl) return;
+            
             let accObj = accounts.find(a => a.name === currentAccount);
             if (!accObj) return;
 
+            // 自動取得當下美國東岸時間 (US Eastern Time) 判斷今日重置基準
+            const options = { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' };
+            const formatter = new Intl.DateTimeFormat('en-US', options);
+            const parts = formatter.formatToParts(new Date());
+            let usYear, usMonth, usDay;
+            parts.forEach(p => {
+                if (p.type === 'year') usYear = p.value;
+                if (p.type === 'month') usMonth = p.value;
+                if (p.type === 'day') usDay = p.value;
+            });
+            let currentUsDateStr = `${usYear}-${usMonth}-${usDay}`;
+
             let accTrades = trades.filter(t => t.account === currentAccount);
-            let sumPnl = accTrades.reduce((sum, t) => sum + (Number(t.pnlAmount) || 0), 0);
+            let allTimePnl = 0;
+            let todayUsPnl = 0;
 
-            // 修正：Initial 永遠不變為原始上限設定 (例如 4000)。
-            // 虧損扣減可風控額，獲利時最高增到上限不超過原始 Initial 額度。
-            let currentRiskBalance = accObj.balance + (sumPnl < 0 ? sumPnl : 0);
-            if (currentRiskBalance > accObj.balance) currentRiskBalance = accObj.balance;
+            accTrades.forEach(t => {
+                let p = Number(t.pnlAmount) || 0;
+                allTimePnl += p;
+                
+                // 只要單子日期與當前美國日期一致，就視作今日盈虧
+                if (t.date === currentUsDateStr) {
+                    todayUsPnl += p;
+                }
+            });
 
-            document.getElementById('currentInitialBalance').innerText = `$${currentRiskBalance}`;
+            // 1. 今日可用風控額邏輯 (重置 4000 + 今日美區總盈虧)
+            let dailyRiskLimit = accObj.initialBalance + todayUsPnl;
+            initialEl.innerText = `$${dailyRiskLimit}`;
+            if (dailyRiskLimit > accObj.initialBalance) {
+                initialEl.style.color = "#00ffa3"; // 獲利時變綠色
+            } else if (dailyRiskLimit < accObj.initialBalance) {
+                initialEl.style.color = "#ff3b30"; // 虧損時變紅色
+            } else {
+                initialEl.style.color = "#00f2fe"; // 平手時為藍色
+            }
+
+            // 2. 帳戶當前總餘額 Live Balance 邏輯 (初始額 4000 + 歷史所有盈虧)
+            let liveBalance = accObj.initialBalance + allTimePnl;
+            liveEl.innerText = `$${liveBalance}`;
             
-            // 會完全隨盈虧起伏的只有 Live Balance
-            let live = accObj.balance + sumPnl;
-            liveEl.innerText = `$${live}`;
-
-            if (live < 0) {
+            if (liveBalance < accObj.initialBalance) {
                 liveEl.style.color = "#ff3b30";
                 liveEl.style.textShadow = "0 0 10px rgba(255, 59, 48, 0.6)";
-            } else if (live > accObj.balance) {
+            } else if (liveBalance > accObj.initialBalance) {
                 liveEl.style.color = "#00ffa3";
                 liveEl.style.textShadow = "0 0 10px rgba(0, 255, 163, 0.6)";
             } else {
@@ -1987,15 +2016,12 @@
             }
             let bal = prompt("請輸入該帳號的初始可用風控額度 ($):", "4000");
             if (bal === null) return;
-            let balNum = parseInt(bal) || 0;
-            const newAcc = { name: name, balance: balNum };
+            let balNum = parseInt(bal) || 4000;
+            const newAcc = { name: name, initialBalance: balNum, balance: balNum };
             accounts.push(newAcc);
             localStorage.setItem('trading_accounts_v2', JSON.stringify(accounts));
             
-            // Firebase 記錄實時 Live Balance
-            let accTrades = trades.filter(t => t.account === name);
-            let sumPnl = accTrades.reduce((sum, t) => sum + (Number(t.pnlAmount) || 0), 0);
-            firestoreSaveAccount({ name: newAcc.name, balance: newAcc.balance + sumPnl });
+            firestoreSaveAccount(newAcc);
 
             currentAccount = name;
             localStorage.setItem('current_trading_account', currentAccount);
@@ -2148,7 +2174,7 @@
 
         function selectTradeFromHistoryTable(tradeId, tradeDate, tradeAccount) {
             if (!accounts.some(a => a.name === tradeAccount)) {
-                const dummyAcc = { name: tradeAccount, balance: 4000 };
+                const dummyAcc = { name: tradeAccount, initialBalance: 4000, balance: 4000 };
                 accounts.push(dummyAcc);
                 localStorage.setItem('trading_accounts_v2', JSON.stringify(accounts));
                 firestoreSaveAccount(dummyAcc);
@@ -2340,7 +2366,7 @@
             let winPnlArray = [];
             let lossPnlArray = [];
             
-            let totalInitialBalance = accounts.reduce((sum, a) => sum + (Number(a.balance) || 0), 0);
+            let totalInitialBalance = accounts.reduce((sum, a) => sum + (Number(a.initialBalance) || 0), 0);
             let currentEquity = totalInitialBalance;
             let maxEquity = totalInitialBalance;
             let maxDdPercent = 0;
@@ -2599,7 +2625,6 @@
 
             document.getElementById('dayStatTitle').innerText = `⚡ Daily Stats (${dayDisplayFormatted})`;
             document.getElementById('val_dayR').innerText = `${dR.toFixed(1)}R`;
-            document.getElementById('dayStatTitle').innerText = `⚡ Daily Stats (${dayDisplayFormatted})`;
             document.getElementById('val_dayMoney').innerText = dM >= 0 ? `$${dM}` : `-$${Math.abs(dM)}`;
             document.getElementById('val_dayWR').innerText = `${dWR}%`;
             applyNeonStyleToBox('box_dayR', dR);
@@ -2921,13 +2946,20 @@
                 });
             }
             
-            // 修正：Firebase 帳戶表記錄實時 Live Balance (原始額度 + 全歷史累計損益)
+            // 寫入 Firebase 時精準記錄 Live Balance
             uniqueAccountsToUpdate.forEach(accName => {
                 let accObj = accounts.find(a => a.name === accName);
                 if (accObj) {
                     let accTrades = trades.filter(t => t.account === accName);
                     let sumPnl = accTrades.reduce((sum, t) => sum + (Number(t.pnlAmount) || 0), 0);
-                    firestoreSaveAccount({ name: accObj.name, balance: accObj.balance + sumPnl });
+                    let liveBalanceValue = accObj.initialBalance + sumPnl;
+                    
+                    // 同步寫入初始額與真實在線額度
+                    firestoreSaveAccount({ 
+                        name: accObj.name, 
+                        initialBalance: accObj.initialBalance,
+                        balance: liveBalanceValue 
+                    });
                 }
             });
 
@@ -2950,7 +2982,12 @@
             if (accObj) {
                 let accTrades = trades.filter(t => t.account === affectedAccountName);
                 let sumPnl = accTrades.reduce((sum, t) => sum + (Number(t.pnlAmount) || 0), 0);
-                firestoreSaveAccount({ name: accObj.name, balance: accObj.balance + sumPnl });
+                let liveBalanceValue = accObj.initialBalance + sumPnl;
+                firestoreSaveAccount({ 
+                    name: accObj.name, 
+                    initialBalance: accObj.initialBalance,
+                    balance: liveBalanceValue 
+                });
             }
 
             activeOrderIndexGlobal = -1;
@@ -3186,7 +3223,7 @@
             } else if (activeChartTabGlobal === 'equity') {
                 document.getElementById('mainChartPanelTitle').innerText = `📈 歷史盈虧資產淨值`;
                 
-                let totalInitialBalance = accounts.reduce((sum, a) => sum + (Number(a.balance) || 0), 0);
+                let totalInitialBalance = accounts.reduce((sum, a) => sum + (Number(a.initialBalance) || 0), 0);
                 let allTradesSorted = [...trades];
                 
                 allTradesSorted.sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
@@ -3294,7 +3331,6 @@
             }
         }
 
-        // Expose modules to global window context for inline events
         window.onAccountSelectorChange = onAccountSelectorChange;
         window.addNewAccountPrompt = addNewAccountPrompt;
         window.deleteCurrentAccount = deleteCurrentAccount;
