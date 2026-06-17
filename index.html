@@ -496,7 +496,7 @@
             box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.85) !important;
         }
 
-        /* "New Trade" 版塊下的區域按鈕與效果賽博霓虹特化美化 */
+        /* "New Trade" 版塊下的區域按鈕與效果賽步霓虹特化美化 */
         #orderTabsZone.order-tabs {
             background: rgba(4, 6, 10, 0.75);
             padding: 8px;
@@ -1208,7 +1208,7 @@
                 </svg>
                 使用 GMAIL 帳戶登入
             </button>
-            <div style="margin-top: 20px; font-size: 11px; color: #475569; font-weight: bold; letter-spacing: 1px;">Version v0.0.8</div>
+            <div style="margin-top: 20px; font-size: 11px; color: #475569; font-weight: bold; letter-spacing: 1px;">Version v0.0.9</div>
         </div>
     </div>
 
@@ -1873,6 +1873,10 @@
 
             // 方法四：定時檢測開發者工具打開狀態，若打開則清空網頁
             setInterval(function () {
+                // 修正：增加行動裝置過濾判定，防止 iPhone Safari 誤判
+                const isMobileDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+                if (isMobileDevice) return; // 若是手機或平板則不觸發安全鎖
+
                 const threshold = 160;
                 const widthThreshold = window.outerWidth - window.innerWidth > threshold;
                 const heightThreshold = window.outerHeight - window.innerHeight > threshold;
@@ -1885,6 +1889,27 @@
         function updateMonthDisplayLabelText(y, m) {
             const mm = String(m).padStart(2, '0');
             document.getElementById('monthDisplayLabel').innerText = `${mm}-${y}`;
+        }
+
+        function renderAccountSelectorHTML() {
+            const select = document.getElementById('currentAccountSelect');
+            if (!select) return;
+            select.innerHTML = "";
+
+            accounts.forEach(acc => {
+                let opt = document.createElement('option');
+                opt.value = acc.name;
+                
+                let accTrades = trades.filter(t => t.account === acc.name);
+                let sumPnl = accTrades.reduce((sum, t) => sum + (Number(t.pnlAmount) || 0), 0);
+                let liveBalance = acc.balance + sumPnl;
+                
+                opt.text = `💼 帳戶：${acc.name} (當前剩餘額度 $${liveBalance})`;
+                if (acc.name === currentAccount) opt.selected = true;
+                select.appendChild(opt);
+            });
+            refreshAccountBalanceDisplay();
+            renderSyncCheckboxes();
         }
 
         function renderAccountSelectorHTML() {
@@ -2896,7 +2921,6 @@
             uniqueAccountsToUpdate.forEach(accName => {
                 let accObj = accounts.find(a => a.name === accName);
                 if (accObj) {
-                    // 修正：保存帳戶時，應帶入原本的初始可用風控額（accObj.balance），而非計算損益後的 liveBalanceValue
                     firestoreSaveAccount({ name: accObj.name, balance: accObj.balance });
                 }
             });
@@ -2918,7 +2942,6 @@
 
             let accObj = accounts.find(a => a.name === affectedAccountName);
             if (accObj) {
-                // 修正：刪除時亦應同步保持原始初始可用風控額不被改寫
                 firestoreSaveAccount({ name: accObj.name, balance: accObj.balance });
             }
 
