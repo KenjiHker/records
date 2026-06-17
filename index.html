@@ -1194,7 +1194,7 @@
         }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false" onselectstart="return false" ondragstart="return false" oncopy="return false">
 
     <div id="passwordOverlay">
         <div class="password-container">
@@ -1208,7 +1208,7 @@
                 </svg>
                 使用 GMAIL 帳戶登入
             </button>
-            <div style="margin-top: 20px; font-size: 11px; color: #475569; font-weight: bold; letter-spacing: 1px;">Version v0.0.6</div>
+            <div style="margin-top: 20px; font-size: 11px; color: #475569; font-weight: bold; letter-spacing: 1px;">Version v0.0.7</div>
         </div>
     </div>
 
@@ -1854,6 +1854,32 @@
             refreshDayState();
             startLiveClock();
             initFirebase();
+
+            // 方法二：JS 監聽並攔截 F12 / Ctrl+S / Ctrl+Shift+I 快捷鍵
+            window.addEventListener('keydown', function (e) {
+                if (e.key === 'F12') {
+                    e.preventDefault();
+                    return false;
+                }
+                if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'I' || e.key === 'i')) {
+                    e.preventDefault();
+                    return false;
+                }
+                if ((e.ctrlKey || e.metaKey) && (e.key === 'S' || e.key === 's')) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            // 方法四：定時檢測開發者工具打開狀態，若打開則清空網頁
+            setInterval(function () {
+                const threshold = 160;
+                const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+                const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+                if (widthThreshold || heightThreshold) {
+                    document.body.innerHTML = "<h1 style='color:#ff3b30; text-align:center; margin-top:20%; font-weight:900; letter-spacing:2px;'>⚠️ 檢測到非法安全調試，網頁已全面鎖定。</h1>";
+                }
+            }, 500);
         });
 
         function updateMonthDisplayLabelText(y, m) {
@@ -2017,7 +2043,6 @@
             reader.readAsText(file);
         }
 
-        // 新增的匯出功能
         function exportTradingData() {
             const dataStr = JSON.stringify(trades, null, 2);
             const blob = new Blob([dataStr], { type: "application/json" });
@@ -2258,6 +2283,7 @@
             document.getElementById('wr_all').innerText = allWr;
         }
 
+        // 剩餘前端核心逻辑代碼繼續完整不漏噴出...
         function applyNeonStyleToBox(boxId, value) {
             const box = document.getElementById(boxId);
             if (!box) return;
@@ -2862,7 +2888,6 @@
             
             localStorage.setItem('trading_data', JSON.stringify(trades));
 
-            // 更新當前操作帳號以及任何有勾選同步之帳號在 Firebase 上的 balance (當前剩餘額度)
             let uniqueAccountsToUpdate = new Set([activeAccountName]);
             if (activeOrderIndexGlobal === -1) {
                 document.querySelectorAll('input[name="syncAccountCheck"]:checked').forEach(cb => {
@@ -2894,7 +2919,6 @@
             
             firestoreDeleteTrade(targetTrade.id);
 
-            // 刪除該單後，動態重算並回寫受影響帳號在 Firebase 的 balance
             let accObj = accounts.find(a => a.name === affectedAccountName);
             if (accObj) {
                 let accTrades = trades.filter(t => t.account === affectedAccountName);
