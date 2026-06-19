@@ -920,17 +920,18 @@
             border-radius: 10px; min-height: 85px; padding: 6px;
             display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box; cursor: pointer; 
             box-shadow: 0 4px 8px rgba(0,0,0,0.4); transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
         }
         .day-box:hover { transform: translateY(-3px) scale(1.02); border-color: #3b82f6; box-shadow: 0 8px 20px rgba(0,0,0,0.7); }
         .day-box.selected-box { border-color: #00f2fe !important; box-shadow: 0 0 16px rgba(0, 242, 254, 0.6) !important; transform: scale(1.01); }
         
         .day-num { font-weight: 800; font-size: 12px; color: #cbd5e1; }
-        .day-wr { font-size: 10px; color: #00f2fe; font-weight: 800; text-align: center; }
-        .day-status { font-size: 10px; text-align: center; color: #334155; font-weight: 600; text-transform: uppercase; }
-        .day-r-val { font-size: 11px; font-weight: 900; text-align: center; font-family: 'Consolas', monospace; }
+        .day-wr { font-size: 10px; color: #00f2fe; font-weight: 800; text-align: center; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+        .day-status { font-size: 10px; text-align: center; color: #334155; font-weight: 600; text-transform: uppercase; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+        .day-r-val { font-size: 11px; font-weight: 900; text-align: center; font-family: 'Consolas', monospace; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
         .day-r-win { color: #00ffa3; text-shadow: 0 0 6px rgba(0, 255, 163, 0.6); } .day-r-loss { color: #ff3b30; text-shadow: 0 0 6px rgba(255, 59, 48, 0.6); }
-        .day-pnl { font-size: 10px; font-weight: 800; text-align: center; font-family: 'Consolas', monospace; }
-        .day-count-label { font-size: 9px; font-weight: 700; text-align: center; color: #64748b; margin-top: 1px; }
+        .day-pnl { font-size: 10px; font-weight: 800; text-align: center; font-family: 'Consolas', monospace; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+        .day-count-label { font-size: 9px; font-weight: 700; text-align: center; color: #64748b; margin-top: 1px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
 
         .day-box.win-day { 
             background: var(--cal-win-bg); 
@@ -1210,7 +1211,7 @@
                 </svg>
                 使用 GMAIL 帳戶登入
             </button>
-            <div style="margin-top: 20px; font-size: 11px; color: #475569; font-weight: bold; letter-spacing: 1px;">Version v0.1.3</div>
+            <div style="margin-top: 20px; font-size: 11px; color: #475569; font-weight: bold; letter-spacing: 1px;">Version v0.1.4</div>
         </div>
     </div>
 
@@ -1595,7 +1596,7 @@
         import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // V0.1.3 修改: 延伸版面至全寬度並增加 Mode 選擇框的 NO 選項
+        // V0.1.4 修改: 修正日曆縮小溢出，今日風控額改用美股收盤時間重置邏輯(夏令16:00/冬令16:00美東=香港翌日04:00/05:00)
         let defaultAccounts = [{ name: "Apex-Main-01", initialBalance: 4000, balance: 4000 }];
         let accounts = JSON.parse(localStorage.getItem('trading_accounts_v2')) || defaultAccounts;
         
@@ -1940,6 +1941,49 @@
             });
         }
 
+        function isDstNewYork(d) {
+            const year = d.getFullYear();
+            const startDst = new Date(year, 2, 8);
+            while (startDst.getDay() !== 0) {
+                startDst.setDate(startDst.getDate() + 1);
+            }
+            startDst.setHours(2, 0, 0, 0);
+            const endDst = new Date(year, 10, 1);
+            while (endDst.getDay() !== 0) {
+                endDst.setDate(endDst.getDate() + 1);
+            }
+            endDst.setHours(2, 0, 0, 0);
+            return d >= startDst && d < endDst;
+        }
+
+        function getTradingTradingCycleDateStr(tradeDateStr, tradeTimeStr) {
+            if (!tradeDateStr) return "";
+            const tTime = tradeTimeStr || "00:00";
+            const [y, m, d] = tradeDateStr.split('-').map(Number);
+            const [hh, mm] = tTime.split(':').map(Number);
+            const localDate = new Date(y, m - 1, d, hh, mm, 0, 0);
+            const formatter = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+            const parts = formatter.formatToParts(localDate);
+            let nyYear, nyMonth, nyDay, nyHour, nyMin;
+            parts.forEach(p => {
+                if (p.type === 'year') nyYear = p.value;
+                if (p.type === 'month') nyMonth = p.value;
+                if (p.type === 'day') nyDay = p.value;
+                if (p.type === 'hour') nyHour = p.value;
+                if (p.type === 'minute') nyMin = p.value;
+            });
+            const nyH = parseInt(nyHour, 10);
+            const nyM = parseInt(nyMin, 10);
+            let nyBaseDate = new Date(Number(nyYear), Number(nyMonth) - 1, Number(nyDay), 12, 0, 0);
+            if (nyH >= 16) {
+                nyBaseDate.setDate(nyBaseDate.getDate() + 1);
+            }
+            const resY = nyBaseDate.getFullYear();
+            const resM = String(nyBaseDate.getMonth() + 1).padStart(2, '0');
+            const resD = String(nyBaseDate.getDate()).padStart(2, '0');
+            return `${resY}-${resM}-${resD}`;
+        }
+
         function refreshAccountBalanceDisplay() {
             const liveEl = document.getElementById('currentLiveBalance');
             const initialEl = document.getElementById('currentInitialBalance');
@@ -1948,17 +1992,18 @@
             let accObj = accounts.find(a => a.name === currentAccount);
             if (!accObj) return;
 
-            // 自動取得當下美國東岸時間 (US Eastern Time) 判斷今日重置基準
-            const options = { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' };
-            const formatter = new Intl.DateTimeFormat('en-US', options);
-            const parts = formatter.formatToParts(new Date());
-            let usYear, usMonth, usDay;
-            parts.forEach(p => {
-                if (p.type === 'year') usYear = p.value;
-                if (p.type === 'month') usMonth = p.value;
-                if (p.type === 'day') usDay = p.value;
-            });
-            let currentUsDateStr = `${usYear}-${usMonth}-${usDay}`;
+            const now = new Date();
+            const isDst = isDstNewYork(now);
+            const resetHourHk = isDst ? 4 : 5;
+            
+            let currentCycleDate = new Date(now);
+            if (now.getHours() >= resetHourHk) {
+                currentCycleDate.setDate(currentCycleDate.getDate() + 1);
+            }
+            const cYear = currentCycleDate.getFullYear();
+            const cMonth = String(currentCycleDate.getMonth() + 1).padStart(2, '0');
+            const cDay = String(currentCycleDate.getDate()).padStart(2, '0');
+            const liveCycleDateStr = `${cYear}-${cMonth}-${cDay}`;
 
             let accTrades = trades.filter(t => t.account === currentAccount);
             let allTimePnl = 0;
@@ -1968,8 +2013,8 @@
                 let p = Number(t.pnlAmount) || 0;
                 allTimePnl += p;
                 
-                // 只要單子日期與當前美國日期一致，就視作今日盈虧
-                if (t.date === currentUsDateStr) {
+                const tradeCycleStr = getTradingTradingCycleDateStr(t.date, t.time);
+                if (tradeCycleStr === liveCycleDateStr) {
                     todayUsPnl += p;
                 }
             });
