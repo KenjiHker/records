@@ -1197,7 +1197,7 @@
         }
     </style>
 </head>
-<body oncontextmenu="return false" onselectstart="return false" ondragstart="return false" oncopy="return false">
+<body oncontextmenu="return false" ondragstart="return false">
 
     <div id="passwordOverlay">
         <div class="password-container">
@@ -1211,7 +1211,7 @@
                 </svg>
                 使用 GMAIL 帳戶登入
             </button>
-            <div style="margin-top: 20px; font-size: 11px; color: #475569; font-weight: bold; letter-spacing: 1px;">Version v0.1.5</div>
+            <div style="margin-top: 20px; font-size: 11px; color: #475569; font-weight: bold; letter-spacing: 1px;">Version v0.1.6</div>
         </div>
     </div>
 
@@ -1596,7 +1596,7 @@
         import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // V0.1.5 修改: 標籤改名為獲利/虧損 R，R值微調支援小數1位，Mode下拉框預設NO，重置界線更動為夏令05:00/冬令06:00
+        // V0.1.6 修改: 文字還原為可選取複製，今日可用風控額重置規則更動(若昨日結算跌破初始值則今日不重置，高於則可加上今日盈利)
         let defaultAccounts = [{ name: "Apex-Main-01", initialBalance: 4000, balance: 4000 }];
         let accounts = JSON.parse(localStorage.getItem('trading_accounts_v2')) || defaultAccounts;
         
@@ -2008,6 +2008,7 @@
             let accTrades = trades.filter(t => t.account === currentAccount);
             let allTimePnl = 0;
             let todayUsPnl = 0;
+            let yesterdayBackPnl = 0;
 
             accTrades.forEach(t => {
                 let p = Number(t.pnlAmount) || 0;
@@ -2016,21 +2017,15 @@
                 const tradeCycleStr = getTradingTradingCycleDateStr(t.date, t.time);
                 if (tradeCycleStr === liveCycleDateStr) {
                     todayUsPnl += p;
+                } else {
+                    yesterdayBackPnl += p;
                 }
             });
 
-            // 1. 今日可用風控額邏輯 (重置 4000 + 今日美區總盈虧)
-            let dailyRiskLimit = accObj.initialBalance + todayUsPnl;
-            initialEl.innerText = `$${dailyRiskLimit}`;
-            if (dailyRiskLimit > accObj.initialBalance) {
-                initialEl.style.color = "#00ffa3"; // 獲利時變綠色
-            } else if (dailyRiskLimit < accObj.initialBalance) {
-                initialEl.style.color = "#ff3b30"; // 虧損時變紅色
-            } else {
-                initialEl.style.color = "#00f2fe"; // 平手時為藍色
-            }
+            // 昨日之前的累積總水位 (初始風控額 + 昨夜之前的盈虧)
+            let yesterdayWaterLevel = accObj.initialBalance + yesterdayBackPnl;
 
-            // 2. 帳戶當前總餘額 Live Balance 邏輯 (初始額 4000 + 歷史所有盈虧)
+            // 當前總可用水位 (初始風控額 + 歷史所有盈虧)
             let liveBalance = accObj.initialBalance + allTimePnl;
             liveEl.innerText = `$${liveBalance}`;
             
@@ -2043,6 +2038,24 @@
             } else {
                 liveEl.style.color = "#ffffff";
                 liveEl.style.textShadow = "none";
+            }
+
+            // 今日可用風控額邏輯修改：
+            // 如果昨天結算的水位已經低於預設初始額度，則不進行每日重置，風控額強制等同於 Live Balance 水位
+            let dailyRiskLimit;
+            if (yesterdayWaterLevel < accObj.initialBalance) {
+                dailyRiskLimit = liveBalance;
+            } else {
+                dailyRiskLimit = accObj.initialBalance + todayUsPnl;
+            }
+
+            initialEl.innerText = `$${dailyRiskLimit}`;
+            if (dailyRiskLimit > accObj.initialBalance) {
+                initialEl.style.color = "#00ffa3";
+            } else if (dailyRiskLimit < accObj.initialBalance) {
+                initialEl.style.color = "#ff3b30";
+            } else {
+                initialEl.style.color = "#00f2fe";
             }
         }
 
