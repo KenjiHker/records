@@ -1211,7 +1211,7 @@
                 </svg>
                 使用 GMAIL 帳戶登入
             </button>
-            <div style="margin-top: 20px; font-size: 11px; color: #475569; font-weight: bold; letter-spacing: 1px;">Version v0.1.6</div>
+            <div style="margin-top: 20px; font-size: 11px; color: #475569; font-weight: bold; letter-spacing: 1px;">Version v0.1.7</div>
         </div>
     </div>
 
@@ -1596,7 +1596,7 @@
         import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // V0.1.6 修改: 文字還原為可選取複製，今日可用風控額重置規則更動(若昨日結算跌破初始值則今日不重置，高於則可加上今日盈利)
+        // V0.1.7 修改: 修正可用風控額重置與統計限制，提供平滑小數點 R 值手動輸入
         let defaultAccounts = [{ name: "Apex-Main-01", initialBalance: 4000, balance: 4000 }];
         let accounts = JSON.parse(localStorage.getItem('trading_accounts_v2')) || defaultAccounts;
         
@@ -1772,7 +1772,6 @@
         async function firestoreSaveAccount(acc) {
             if (!user || !user.email) return;
             try {
-                // 確保寫入 Firebase 時有明確寫入 initialBalance 和真正的 balance
                 const docRef = doc(db, 'artifacts', appId, 'users', user.email, 'accounts', acc.name);
                 await setDoc(docRef, acc);
             } catch (err) {
@@ -1911,7 +1910,6 @@
                 let opt = document.createElement('option');
                 opt.value = acc.name;
                 
-                // 本地計算真實 Live Balance 呈現，確保顯示無誤
                 let accTrades = trades.filter(t => t.account === acc.name);
                 let sumPnl = accTrades.reduce((sum, t) => sum + (Number(t.pnlAmount) || 0), 0);
                 let liveBalanceValue = acc.initialBalance + sumPnl;
@@ -1945,7 +1943,7 @@
             const year = d.getFullYear();
             const startDst = new Date(year, 2, 8);
             while (startDst.getDay() !== 0) {
-                startDst.setDate(startDst.getDate() + 1);
+                startDst.setDate(startDst.setDate() + 1);
             }
             startDst.setHours(2, 0, 0, 0);
             const endDst = new Date(year, 10, 1);
@@ -1973,7 +1971,6 @@
                 if (p.type === 'minute') nyMin = p.value;
             });
             const nyH = parseInt(nyHour, 10);
-            const nyM = parseInt(nyMin, 10);
             let nyBaseDate = new Date(Number(nyYear), Number(nyMonth) - 1, Number(nyDay), 12, 0, 0);
             if (nyH >= 16) {
                 nyBaseDate.setDate(nyBaseDate.getDate() + 1);
@@ -1992,19 +1989,7 @@
             let accObj = accounts.find(a => a.name === currentAccount);
             if (!accObj) return;
 
-            const now = new Date();
-            const isDst = isDstNewYork(now);
-            const resetHourHk = isDst ? 5 : 6;
-            
-            let currentCycleDate = new Date(now);
-            if (now.getHours() >= resetHourHk) {
-                currentCycleDate.setDate(currentCycleDate.getDate() + 1);
-            }
-            const cYear = currentCycleDate.getFullYear();
-            const cMonth = String(currentCycleDate.getMonth() + 1).padStart(2, '0');
-            const cDay = String(currentCycleDate.getDate()).padStart(2, '0');
-            const liveCycleDateStr = `${cYear}-${cMonth}-${cDay}`;
-
+            let todayStr = getTodayDateStr();
             let accTrades = trades.filter(t => t.account === currentAccount);
             let allTimePnl = 0;
             let todayUsPnl = 0;
@@ -2014,18 +1999,14 @@
                 let p = Number(t.pnlAmount) || 0;
                 allTimePnl += p;
                 
-                const tradeCycleStr = getTradingTradingCycleDateStr(t.date, t.time);
-                if (tradeCycleStr === liveCycleDateStr) {
+                if (t.date === todayStr) {
                     todayUsPnl += p;
                 } else {
                     yesterdayBackPnl += p;
                 }
             });
 
-            // 昨日之前的累積總水位 (初始風控額 + 昨夜之前的盈虧)
             let yesterdayWaterLevel = accObj.initialBalance + yesterdayBackPnl;
-
-            // 當前總可用水位 (初始風控額 + 歷史所有盈虧)
             let liveBalance = accObj.initialBalance + allTimePnl;
             liveEl.innerText = `$${liveBalance}`;
             
@@ -2040,8 +2021,6 @@
                 liveEl.style.textShadow = "none";
             }
 
-            // 今日可用風控額邏輯修改：
-            // 如果昨天結算的水位已經低於預設初始額度，則不進行每日重置，風控額強制等同於 Live Balance 水位
             let dailyRiskLimit;
             if (yesterdayWaterLevel < accObj.initialBalance) {
                 dailyRiskLimit = liveBalance;
@@ -2198,15 +2177,15 @@
             }
 
             let valR = rInput.value;
-            if (valR !== "") {
+            if (valR !== "" && !valR.endsWith('.')) {
                 let numR = Math.abs(parseFloat(valR));
                 if (!isNaN(numR)) {
                     if (outcome === 'LOSS') {
-                        rInput.value = numR > 0 ? (-numR).toFixed(1) : (0).toFixed(1);
+                        rInput.value = numR > 0 ? -numR : 0;
                     } else if (outcome === 'BE') {
-                        rInput.value = (0).toFixed(1);
+                        rInput.value = 0;
                     } else {
-                        rInput.value = numR.toFixed(1);
+                        rInput.value = numR;
                     }
                 }
             }
@@ -2308,7 +2287,7 @@
                     <td><span style="color:${t.position === 'Short' ? '#ff9f43' : '#38bdf8'}; font-weight:800;">${t.position || 'Long'}</span></td>
                     <td><span style="background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px; font-family:monospace;">${t.symbol || 'NQ'}</span></td>
                     <td><span style="color:${outcomeColor}; font-weight:800;">● ${t.outcome}</span></td>
-                    <td style="font-family:monospace; color:#00f2fe;">${Number(t.rValue).toFixed(1)}R</td>
+                    <td style="font-family:monospace; color:#00f2fe;">${Number(t.rValue).toString()}R</td>
                     <td style="font-family:monospace; color:${t.pnlAmount >= 0 ? '#00ffa3' : '#ff3b30'}">${t.pnlAmount >= 0 ? '$' + t.pnlAmount : '-$' + Math.abs(t.pnlAmount)}</td>
                     <td><span style="color:#fb923c;">${displayTheory}</span></td>
                     <td><span style="color:#a855f7; font-weight:700;">${displayTf}</span></td>
@@ -2651,7 +2630,7 @@
             let wWR = wTotal > 0 ? Math.round((wWins / wTotal) * 100) : 0;
             let dWR = dTotal > 0 ? Math.round((dWins / dTotal) * 100) : 0;
 
-            document.getElementById('val_totalR').innerText = `${tR.toFixed(1)}R`;
+            document.getElementById('val_totalR').innerText = `${tR.toString()}R`;
             document.getElementById('val_totalMoney').innerText = tM >= 0 ? `$${tM}` : `-$${Math.abs(tM)}`;
             document.getElementById('val_totalWR').innerText = `${tWR}%`;
             applyNeonStyleToBox('box_totalR', tR);
@@ -2662,14 +2641,14 @@
             let curMonthEngStr = monthNamesEng[now.getMonth()] || "May";
             document.getElementById('monthStatTitle').innerText = `💵 ${curMonthEngStr} Stats`;
             
-            document.getElementById('val_yearR').innerText = `${yR.toFixed(1)}R`;
+            document.getElementById('val_yearR').innerText = `${yR.toString()}R`;
             document.getElementById('val_yearMoney').innerText = yM >= 0 ? `$${yM}` : `-$${Math.abs(yM)}`;
             document.getElementById('val_yearWR').innerText = `${yWR}%`;
             applyNeonStyleToBox('box_yearR', yR);
             applyNeonStyleToBox('box_yearMoney', yM);
             applyNeonStyleToBox('box_yearWR', yM);
 
-            document.getElementById('val_monthR').innerText = `${mR.toFixed(1)}R`;
+            document.getElementById('val_monthR').innerText = `${mR.toString()}R`;
             document.getElementById('val_monthMoney').innerText = mM >= 0 ? `$${mM}` : `-$${Math.abs(mM)}`;
             document.getElementById('val_monthWR').innerText = `${mWR}%`;
             applyNeonStyleToBox('box_monthR', mR);
@@ -2677,7 +2656,7 @@
             applyNeonStyleToBox('box_monthWR', mM);
 
             document.getElementById('weekStatTitle').innerText = `📅 Weekly Stats (${sunStr} ~ ${satStr})`;
-            document.getElementById('val_weekR').innerText = `${wR.toFixed(1)}R`;
+            document.getElementById('val_weekR').innerText = `${wR.toString()}R`;
             document.getElementById('val_weekMoney').innerText = wM >= 0 ? `$${wM}` : `-$${Math.abs(wM)}`;
             document.getElementById('val_weekWR').innerText = `${wWR}%`;
             applyNeonStyleToBox('box_weekR', wR);
@@ -2685,7 +2664,7 @@
             applyNeonStyleToBox('box_weekWR', wM);
 
             document.getElementById('dayStatTitle').innerText = `⚡ Daily Stats (${dayDisplayFormatted})`;
-            document.getElementById('val_dayR').innerText = `${dR.toFixed(1)}R`;
+            document.getElementById('val_dayR').innerText = `${dR.toString()}R`;
             document.getElementById('val_dayMoney').innerText = dM >= 0 ? `$${dM}` : `-$${Math.abs(dM)}`;
             document.getElementById('val_dayWR').innerText = `${dWR}%`;
             applyNeonStyleToBox('box_dayR', dR);
@@ -2768,7 +2747,7 @@
                     else box.classList.add("be-day");
 
                     html += `<div class="day-wr">WR: ${wr}%</div>`;
-                    html += `<div class="day-r-val ${sumPnl >= 0 ? 'day-r-win' : 'day-r-loss'}">${sumR.toFixed(1)} R</div>`;
+                    html += `<div class="day-r-val ${sumPnl >= 0 ? 'day-r-win' : 'day-r-loss'}">${sumR.toString()} R</div>`;
                     html += `<div class="day-pnl ${sumPnl >= 0 ? 'day-r-win' : 'day-r-loss'}">${sumPnl >= 0 ? '$'+sumPnl : '-$'+Math.abs(sumPnl)}</div>`;
                     html += `<div class="day-count-label">${totalCount} ${totalCount > 1 ? 'Trades' : 'Trade'}</div>`;
                 } else {
@@ -3007,7 +2986,6 @@
                 });
             }
             
-            // 寫入 Firebase 時精準記錄 Live Balance
             uniqueAccountsToUpdate.forEach(accName => {
                 let accObj = accounts.find(a => a.name === accName);
                 if (accObj) {
@@ -3015,7 +2993,6 @@
                     let sumPnl = accTrades.reduce((sum, t) => sum + (Number(t.pnlAmount) || 0), 0);
                     let liveBalanceValue = accObj.initialBalance + sumPnl;
                     
-                    // 同步寫入初始額與真實在線額度
                     firestoreSaveAccount({ 
                         name: accObj.name, 
                         initialBalance: accObj.initialBalance,
